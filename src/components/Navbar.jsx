@@ -4,11 +4,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
 const navLinks = [
-  { label: 'Home',    href: '/',        internal: true  },
-  { label: 'About',   href: '/about',   internal: true  },
-  { label: 'Events',  href: '/events',  internal: true  },
-  { label: 'Team',    href: '/team',    internal: true  },
-  { label: 'Contact', href: '/contact', internal: true  },
+  { label: 'Home',    href: '/',         internal: true },
+  { label: 'About',   href: '/about',    internal: true },
+  { label: 'Events',  href: '/events',   internal: true },
+  { label: 'Team',    href: '/team',     internal: true },
+  { label: 'Certify', href: '/certify',  internal: true },
+  { label: 'Contact', href: '/contact',  internal: true },
 ];
 
 export function Navbar() {

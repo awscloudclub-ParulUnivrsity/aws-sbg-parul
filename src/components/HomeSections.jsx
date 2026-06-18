@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, ArrowUpRight, Clock, Users } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
+const C = '#AD5CFF'; // single brand color for all cards
+
 /* ─────────────────────────────────────────
    UPCOMING EVENTS
 ───────────────────────────────────────── */
@@ -14,19 +16,17 @@ const UPCOMING = [
     time: 'TBA',
     location: 'Parul University, Vadodara',
     desc: 'Explore the fundamentals of cloud computing with AWS — hands-on labs, live demos, and guided walkthroughs for students at all levels.',
-    color: '#AD5CFF',
     href: '/events',
   },
 ];
 
 export function UpcomingEvents() {
-  const { dark } = useTheme();
   return (
     <section className="py-20 border-t" style={{ borderColor: 'var(--border-muted)' }}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
           <div className="space-y-1">
-            <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: '#AD5CFF' }}>
+            <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: C }}>
               UPCOMING
             </p>
             <h2 className="text-2xl font-extrabold uppercase" style={{ color: 'var(--text-primary)' }}>
@@ -36,7 +36,7 @@ export function UpcomingEvents() {
           <Link to="/events"
             className="inline-flex items-center gap-1.5 font-mono font-bold uppercase no-underline transition-colors"
             style={{ fontSize: '10px', color: 'var(--text-muted)' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#AD5CFF'}
+            onMouseEnter={e => e.currentTarget.style.color = C}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
             All Events <ArrowUpRight size={12} />
           </Link>
@@ -47,41 +47,41 @@ export function UpcomingEvents() {
             <div key={ev.title}
               className="rounded-2xl border overflow-hidden transition-all duration-300"
               style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = ev.color + '60'}
+              onMouseEnter={e => e.currentTarget.style.borderColor = C + '60'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
 
-              {/* Top accent bar */}
-              <div className="h-1 w-full" style={{ background: `linear-gradient(to right, ${ev.color}, #F97316)` }} />
+              <div className="h-1 w-full" style={{ background: `linear-gradient(to right, ${C}, #F97316)` }} />
 
               <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
                 <div className="flex-1 space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono font-bold uppercase px-2 py-0.5 rounded border"
-                      style={{ fontSize: '8px', background: ev.color + '15', borderColor: ev.color + '40', color: ev.color }}>
+                      style={{ fontSize: '8px', background: C + '15', borderColor: C + '40', color: C }}>
                       {ev.type}
                     </span>
                     <span className="font-mono font-bold uppercase px-2 py-0.5 rounded"
-                      style={{ fontSize: '8px', background: '#AD5CFF', color: '#fff' }}>
+                      style={{ fontSize: '8px', background: C, color: '#fff' }}>
                       ◉ UPCOMING
                     </span>
                   </div>
                   <h3 className="font-extrabold text-xl uppercase" style={{ color: 'var(--text-primary)' }}>
                     {ev.title}
                   </h3>
-                  <p className="font-sans font-light leading-relaxed" style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '560px' }}>
+                  <p className="font-sans font-light leading-relaxed"
+                    style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '560px' }}>
                     {ev.desc}
                   </p>
-                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 font-mono" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                    <span className="flex items-center gap-1.5"><Calendar size={11} style={{ color: '#06B6D4' }} />{ev.date}</span>
-                    <span className="flex items-center gap-1.5"><Clock size={11} style={{ color: '#AD5CFF' }} />{ev.time}</span>
+                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 font-mono"
+                    style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                    <span className="flex items-center gap-1.5"><Calendar size={11} style={{ color: C }} />{ev.date}</span>
                     <span className="flex items-center gap-1.5"><MapPin size={11} style={{ color: '#F97316' }} />{ev.location}</span>
                   </div>
                 </div>
                 <Link to={ev.href}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-md font-mono font-bold uppercase text-white no-underline transition-all flex-shrink-0 self-start md:self-center"
-                  style={{ fontSize: '10px', background: '#AD5CFF', boxShadow: '0 0 20px rgba(173,92,255,0.2)' }}
+                  style={{ fontSize: '10px', background: C, boxShadow: `0 0 20px ${C}30` }}
                   onMouseEnter={e => e.currentTarget.style.background = '#9C47FF'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#AD5CFF'}>
+                  onMouseLeave={e => e.currentTarget.style.background = C}>
                   Learn More <ArrowUpRight size={12} />
                 </Link>
               </div>
@@ -103,7 +103,6 @@ const PAST = [
     date: 'MAR 2, 2026',
     location: 'Parul University, Vadodara',
     desc: 'The second edition of Cloud Verse — a community gathering celebrating cloud builders, live project showcases, and networking.',
-    color: '#AD5CFF',
     photo: '/photos/events/cloud-verse-2.jpg',
   },
   {
@@ -112,7 +111,6 @@ const PAST = [
     date: 'JAN 10, 2026',
     location: 'Parul University, Vadodara',
     desc: 'Intensive certification bootcamp covering AWS Academy curriculum and CLF-C02 exam preparation strategies.',
-    color: '#06B6D4',
     photo: '/photos/events/certification-bootcamp.jpg',
   },
   {
@@ -121,7 +119,6 @@ const PAST = [
     date: 'DEC 26, 2025',
     location: 'Parul University, Vadodara',
     desc: 'Onboarding session introducing students to AWS Academy resources, learning paths, and cloud fundamentals.',
-    color: '#F97316',
     photo: '/photos/events/aws-academy-intro.jpg',
   },
 ];
@@ -133,22 +130,18 @@ function PastCard({ ev }) {
   return (
     <div className="rounded-xl border overflow-hidden flex flex-col transition-all duration-300"
       style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = ev.color + '60'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = C + '60'}
       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
 
-      {/* Photo */}
       <div className="relative overflow-hidden flex items-center justify-center"
-        style={{ height: '160px', background: dark ? '#0D1117' : '#F1F5F9' }}>
+        style={{ aspectRatio: '16/9', background: dark ? '#0D1117' : '#F1F5F9' }}>
         {!imgFailed ? (
           <img src={ev.photo} alt={ev.title}
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             onError={() => setImgFailed(true)} />
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Calendar size={28} style={{ color: ev.color + '80' }} />
-          </div>
+          <Calendar size={28} style={{ color: C + '80' }} />
         )}
-        {/* Badge */}
         <div className="absolute top-3 left-3 font-mono font-bold uppercase px-2 py-0.5 rounded"
           style={{ fontSize: '8px', background: dark ? '#1E293B' : '#E2E8F0', color: 'var(--text-muted)' }}>
           ✓ PAST
@@ -158,12 +151,12 @@ function PastCard({ ev }) {
       </div>
 
       <div className="p-4 flex flex-col gap-2 flex-1">
-        <span className="font-mono font-bold uppercase" style={{ fontSize: '8px', color: ev.color }}>{ev.type}</span>
+        <span className="font-mono font-bold uppercase" style={{ fontSize: '8px', color: C }}>{ev.type}</span>
         <h3 className="font-bold leading-snug" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{ev.title}</h3>
         <p className="font-sans font-light leading-relaxed flex-1" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{ev.desc}</p>
         <div className="flex flex-col gap-1 font-mono pt-1" style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>
-          <span className="flex items-center gap-1.5"><Calendar size={9} style={{ color: ev.color }} />{ev.date}</span>
-          <span className="flex items-center gap-1.5"><MapPin size={9} style={{ color: ev.color }} />{ev.location}</span>
+          <span className="flex items-center gap-1.5"><Calendar size={9} style={{ color: C }} />{ev.date}</span>
+          <span className="flex items-center gap-1.5"><MapPin size={9} style={{ color: C }} />{ev.location}</span>
         </div>
       </div>
     </div>
@@ -176,7 +169,7 @@ export function PastEvents() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex items-end justify-between mb-10 gap-4 flex-wrap">
           <div className="space-y-1">
-            <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: '#F97316' }}>
+            <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: C }}>
               ARCHIVE
             </p>
             <h2 className="text-2xl font-extrabold uppercase" style={{ color: 'var(--text-primary)' }}>
@@ -186,7 +179,7 @@ export function PastEvents() {
           <Link to="/events"
             className="inline-flex items-center gap-1.5 font-mono font-bold uppercase no-underline transition-colors"
             style={{ fontSize: '10px', color: 'var(--text-muted)' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#AD5CFF'}
+            onMouseEnter={e => e.currentTarget.style.color = C}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
             View All <ArrowUpRight size={12} />
           </Link>
@@ -207,9 +200,7 @@ const COLLABS = [
     name: 'AWS UG Ahmedabad',
     handle: '@awsugahmedabad',
     desc: 'The Ahmedabad AWS User Group — one of the most active AWS communities in Gujarat, connecting cloud professionals, builders, and students across the city.',
-    url: 'https://www.meetup.com/aws-sbg-at-parul-university//amazon-web-services-ahmedabad/',
-    color: '#F97316',
-    gradient: 'linear-gradient(135deg, #F97316, #F59E0B)',
+    url: 'https://www.meetup.com/amazon-web-services-ahmedabad/',
     initial: 'AHM',
     logo: '/logos/aws-ug-ahmedabad.png',
   },
@@ -217,9 +208,7 @@ const COLLABS = [
     name: 'AWS UG Vadodara',
     handle: '@awsugvadodara',
     desc: 'The Vadodara AWS User Group — our local chapter partner driving cloud adoption and knowledge sharing in the Baroda region, right in our backyard.',
-    url: 'https://www.meetup.com/aws-sbg-at-parul-university//awsugvadodara/',
-    color: '#06B6D4',
-    gradient: 'linear-gradient(135deg, #06B6D4, #AD5CFF)',
+    url: 'https://www.meetup.com/awsugvadodara/',
     initial: 'VDR',
     logo: '/logos/aws-ug-vadodara.png',
   },
@@ -231,47 +220,44 @@ function CollabCard({ collab }) {
   return (
     <div className="rounded-2xl border overflow-hidden flex flex-col md:flex-row transition-all duration-300"
       style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = collab.color + '60'}
+      onMouseEnter={e => e.currentTarget.style.borderColor = C + '60'}
       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
 
-      {/* Left accent */}
-      <div className="w-full md:w-2 md:h-auto h-1 flex-shrink-0 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none"
-        style={{ background: collab.gradient }} />
+      <div className="w-full md:w-1 md:h-auto h-1 flex-shrink-0"
+        style={{ background: `linear-gradient(to bottom, ${C}, #F97316)` }} />
 
       <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
-        {/* Logo / avatar */}
         <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border"
-          style={{ background: collab.color + '12', borderColor: collab.color + '30' }}>
+          style={{ background: C + '12', borderColor: C + '30' }}>
           {!imgFailed ? (
             <img src={collab.logo} alt={collab.name}
               className="w-full h-full object-contain p-2"
               onError={() => setImgFailed(true)} />
           ) : (
-            <span className="font-mono font-black text-xs" style={{ color: collab.color }}>{collab.initial}</span>
+            <span className="font-mono font-black text-xs" style={{ color: C }}>{collab.initial}</span>
           )}
         </div>
 
-        {/* Info */}
         <div className="flex-1 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-bold" style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
               {collab.name}
             </h3>
-            <span className="font-mono" style={{ fontSize: '10px', color: collab.color }}>
+            <span className="font-mono" style={{ fontSize: '10px', color: C }}>
               {collab.handle}
             </span>
           </div>
-          <p className="font-sans font-light leading-relaxed" style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '480px' }}>
+          <p className="font-sans font-light leading-relaxed"
+            style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '480px' }}>
             {collab.desc}
           </p>
         </div>
 
-        {/* CTA */}
         <a href={collab.url} target="_blank" rel="noreferrer"
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md font-mono font-bold uppercase no-underline transition-all flex-shrink-0 self-start sm:self-center"
-          style={{ fontSize: '9px', color: collab.color, borderColor: collab.color + '40', border: '1px solid', background: collab.color + '08' }}
-          onMouseEnter={e => { e.currentTarget.style.background = collab.color; e.currentTarget.style.color = '#fff'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = collab.color + '08'; e.currentTarget.style.color = collab.color; }}>
+          style={{ fontSize: '9px', color: C, border: '1px solid', borderColor: C + '40', background: C + '08' }}
+          onMouseEnter={e => { e.currentTarget.style.background = C; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = C + '08'; e.currentTarget.style.color = C; }}>
           Visit <ArrowUpRight size={11} />
         </a>
       </div>
@@ -284,13 +270,14 @@ export function CommunityCollabs() {
     <section className="py-20 border-t" style={{ borderColor: 'var(--border-muted)' }}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10 space-y-2">
-          <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: '#06B6D4' }}>
+          <p className="font-mono font-bold uppercase tracking-widest" style={{ fontSize: '10px', color: C }}>
             NETWORK :: COMMUNITY_PARTNERS
           </p>
           <h2 className="text-2xl font-extrabold uppercase" style={{ color: 'var(--text-primary)' }}>
             Community Collaborations
           </h2>
-          <p className="font-sans font-light" style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
+          <p className="font-sans font-light"
+            style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
             We work alongside these AWS User Groups to connect our members with the wider Gujarat cloud ecosystem.
           </p>
         </div>
@@ -299,17 +286,16 @@ export function CommunityCollabs() {
           {COLLABS.map(c => <CollabCard key={c.name} collab={c} />)}
         </div>
 
-        {/* AWS UG join note */}
         <div className="mt-8 rounded-xl border p-5 flex items-center gap-4"
-          style={{ background: 'rgba(6,182,212,0.04)', borderColor: 'rgba(6,182,212,0.2)' }}>
-          <Users size={18} style={{ color: '#06B6D4', flexShrink: 0 }} />
+          style={{ background: C + '06', borderColor: C + '25' }}>
+          <Users size={18} style={{ color: C, flexShrink: 0 }} />
           <p className="font-sans font-light" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            AWS User Groups are free, community-led groups open to everyone — students, professionals, and enthusiasts.
+            AWS User Groups are free, community-led groups open to everyone — students, professionals, and enthusiasts.{' '}
             <a href="https://aws.amazon.com/developer/community/usergroups/" target="_blank" rel="noreferrer"
-              className="no-underline font-semibold ml-1 transition-colors"
-              style={{ color: '#06B6D4' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#AD5CFF'}
-              onMouseLeave={e => e.currentTarget.style.color = '#06B6D4'}>
+              className="no-underline font-semibold transition-colors"
+              style={{ color: C }}
+              onMouseEnter={e => e.currentTarget.style.color = '#9C47FF'}
+              onMouseLeave={e => e.currentTarget.style.color = C}>
               Find your local group →
             </a>
           </p>
