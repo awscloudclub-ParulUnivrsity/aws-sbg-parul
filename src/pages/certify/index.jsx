@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { Award, CheckCircle, Upload, Loader } from 'lucide-react';
+import { Award, CheckCircle, Upload, Loader, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 const certs = [
@@ -119,8 +119,7 @@ export default function CertifyPage() {
       setResultFile(null);
       setPhotoFile(null);
 
-      // Reset form
-      setTimeout(() => setSuccess(false), 5000);
+      // Show success modal (don't auto-hide)
     } catch (err) {
       console.error('Submission error:', err);
       setError(err.message || 'Failed to submit certification. Please try again.');
@@ -212,16 +211,6 @@ export default function CertifyPage() {
               </span>
             </div>
           </div>
-
-          {/* Success Message */}
-          {success && (
-            <div className="mx-6 mt-6 px-4 py-3 rounded-lg border"
-              style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.3)', color: '#22C55E' }}>
-              <p className="font-sans text-sm flex items-center gap-2">
-                <CheckCircle size={16} /> Certification submitted successfully! Our team will review it soon.
-              </p>
-            </div>
-          )}
 
           {/* Error Message */}
           {error && (
@@ -485,6 +474,56 @@ export default function CertifyPage() {
           Your submission will be reviewed by our social media team. We'll reach out once it's approved!
         </p>
       </div>
+
+      {/* Success Modal Popup */}
+      {success && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSuccess(false)}>
+          <div className="relative rounded-2xl border max-w-md w-full p-8 text-center space-y-4 animate-scale-in"
+            style={{ background: 'var(--card-bg)', borderColor: 'rgba(34,197,94,0.3)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+            onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close button */}
+            <button
+              onClick={() => setSuccess(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+              style={{ background: 'var(--surface-low)', color: 'var(--text-muted)' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--border-muted)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-low)'}>
+              <X size={16} />
+            </button>
+
+            {/* Success icon */}
+            <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
+              style={{ background: 'rgba(34,197,94,0.15)' }}>
+              <CheckCircle size={32} style={{ color: '#22C55E' }} />
+            </div>
+
+            {/* Message */}
+            <div className="space-y-2">
+              <h3 className="font-mono font-bold uppercase"
+                style={{ fontSize: '14px', color: 'var(--text-primary)', letterSpacing: '0.05em' }}>
+                Submission Successful!
+              </h3>
+              <p className="font-sans font-light leading-relaxed"
+                style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                Your certification has been submitted successfully. Our social media team will review it and reach out to you soon.
+              </p>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={() => setSuccess(false)}
+              className="w-full py-3 rounded-lg font-mono font-bold uppercase text-white transition-all"
+              style={{ fontSize: '11px', background: '#22C55E', boxShadow: '0 0 20px rgba(34,197,94,0.2)' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#16A34A'}
+              onMouseLeave={e => e.currentTarget.style.background = '#22C55E'}>
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

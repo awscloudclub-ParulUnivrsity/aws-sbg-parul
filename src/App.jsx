@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
@@ -41,35 +41,49 @@ export default function App() {
 function AppShell() {
   console.log('AppShell rendering');
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/" element={<PublicLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="events" element={<EventsPage />} />
-        <Route path="contact" element={<ContactPage />} />
-        <Route path="team" element={<TeamPage />} />
-        <Route path="team/:slug" element={<DevProfilePage />} />
-        <Route path="certify" element={<CertifyPage />} />
-      </Route>
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<PublicLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="team" element={<TeamPage />} />
+          <Route path="team/:slug" element={<DevProfilePage />} />
+          <Route path="certify" element={<CertifyPage />} />
+        </Route>
 
-      {/* Dashboard login (public) */}
-      <Route path="/dashboard/login" element={<DashboardLogin />} />
+        {/* Dashboard login (public) */}
+        <Route path="/dashboard/login" element={<DashboardLogin />} />
 
-      {/* Protected dashboard routes */}
-      <Route path="/dashboard" element={<DashboardGuard><DashboardLayout /></DashboardGuard>}>
-        <Route index element={<DashboardOverview />} />
-        <Route path="members" element={<DashboardMembers />} />
-        <Route path="team" element={<DashboardTeam />} />
-        <Route path="events" element={<DashboardEvents />} />
-        <Route path="certifications" element={<DashboardCertifications />} />
-        <Route path="settings" element={<DashboardSettings />} />
-        <Route path="badge" element={<DashboardBadge />} />
-      </Route>
+        {/* Protected dashboard routes */}
+        <Route path="/dashboard" element={<DashboardGuard><DashboardLayout /></DashboardGuard>}>
+          <Route index element={<DashboardOverview />} />
+          <Route path="members" element={<DashboardMembers />} />
+          <Route path="team" element={<DashboardTeam />} />
+          <Route path="events" element={<DashboardEvents />} />
+          <Route path="certifications" element={<DashboardCertifications />} />
+          <Route path="settings" element={<DashboardSettings />} />
+          <Route path="badge" element={<DashboardBadge />} />
+        </Route>
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
+}
+
+// Scroll to top component
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
 }
 
 function PublicLayout() {
