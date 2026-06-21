@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
-const C = '#AD5CFF'; // single brand color
+const C = '#AD5CFF';
 
 export function MemberCard({ dev }) {
   const { dark } = useTheme();
   const [imgFailed, setImgFailed] = useState(false);
+
+  const skills = dev.skills || [];
+  const hasPhoto = dev.photo && !imgFailed;
 
   return (
     <div
@@ -22,7 +25,7 @@ export function MemberCard({ dev }) {
       {/* Photo / avatar */}
       <div className="relative overflow-hidden flex items-center justify-center"
         style={{ aspectRatio: '4/3', background: dark ? '#0D1117' : '#F1F5F9' }}>
-        {!imgFailed ? (
+        {hasPhoto ? (
           <img
             src={dev.photo}
             alt={dev.name}
@@ -49,35 +52,46 @@ export function MemberCard({ dev }) {
           <h3 className="font-bold" style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
             {dev.name}
           </h3>
-          <p className="font-sans truncate mt-0.5" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            {dev.title}
-          </p>
-        </div>
-
-        {/* Skills */}
-        <div className="flex flex-wrap gap-1.5">
-          {dev.skills.slice(0, 3).map(s => (
-            <span key={s} className="px-2 py-0.5 rounded border font-mono"
-              style={{ fontSize: '9px', background: C + '10', borderColor: C + '25', color: C }}>
-              {s}
-            </span>
-          ))}
-          {dev.skills.length > 3 && (
-            <span className="px-2 py-0.5 rounded border font-mono"
-              style={{ fontSize: '9px', background: 'var(--surface-mid)', borderColor: 'var(--border-muted)', color: 'var(--text-subtle)' }}>
-              +{dev.skills.length - 3}
-            </span>
+          {dev.title && (
+            <p className="font-sans truncate mt-0.5" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {dev.title}
+            </p>
           )}
         </div>
 
+        {/* Skills */}
+        {skills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {skills.slice(0, 3).map(s => (
+              <span key={s} className="px-2 py-0.5 rounded border font-mono"
+                style={{ fontSize: '9px', background: C + '10', borderColor: C + '25', color: C }}>
+                {s}
+              </span>
+            ))}
+            {skills.length > 3 && (
+              <span className="px-2 py-0.5 rounded border font-mono"
+                style={{ fontSize: '9px', background: 'var(--surface-mid)', borderColor: 'var(--border-muted)', color: 'var(--text-subtle)' }}>
+                +{skills.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* CTA */}
-        <Link to={`/team/${dev.slug}`}
-          className="mt-auto flex items-center justify-between px-3 py-2 rounded-md border font-mono font-bold uppercase no-underline transition-all"
-          style={{ fontSize: '9px', letterSpacing: '0.08em', color: C, borderColor: C + '30', background: C + '08' }}
-          onMouseEnter={e => { e.currentTarget.style.background = C; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = C; }}
-          onMouseLeave={e => { e.currentTarget.style.background = C + '08'; e.currentTarget.style.color = C; e.currentTarget.style.borderColor = C + '30'; }}>
-          View Full Profile <ArrowUpRight size={11} />
-        </Link>
+        {dev.slug ? (
+          <Link to={`/team/${dev.slug}`}
+            className="mt-auto flex items-center justify-between px-3 py-2 rounded-md border font-mono font-bold uppercase no-underline transition-all"
+            style={{ fontSize: '9px', letterSpacing: '0.08em', color: C, borderColor: C + '30', background: C + '08' }}
+            onMouseEnter={e => { e.currentTarget.style.background = C; e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = C; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C + '08'; e.currentTarget.style.color = C; e.currentTarget.style.borderColor = C + '30'; }}>
+            View Full Profile <ArrowUpRight size={11} />
+          </Link>
+        ) : (
+          <div className="mt-auto flex items-center justify-between px-3 py-2 rounded-md border font-mono font-bold uppercase"
+            style={{ fontSize: '9px', letterSpacing: '0.08em', color: 'var(--text-subtle)', borderColor: 'var(--border-muted)', background: 'var(--surface-mid)' }}>
+            AWS SBG Member
+          </div>
+        )}
       </div>
     </div>
   );

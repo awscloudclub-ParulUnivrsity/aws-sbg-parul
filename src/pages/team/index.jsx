@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchTeamMembers();
@@ -22,15 +23,16 @@ export default function TeamPage() {
             email,
             role,
             department,
-            avatar_url
+            avatar_url,
+            bio
           )
         `)
         .order('created_at', { ascending: true });
-      
+
       if (error) throw error;
       setTeamMembers(data || []);
-    } catch (error) {
-      console.error('Error fetching team members:', error);
+    } catch (err) {
+      setError('Failed to load team members.');
     } finally {
       setLoading(false);
     }
@@ -65,26 +67,40 @@ export default function TeamPage() {
           </p>
         </div>
 
-        {/* Team Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teamMembers.map(member => (
-            <MemberCard
-              key={member.id}
-              dev={{
-                name: member.profile?.name || 'Team Member',
-                role: member.role_title || member.profile?.role || 'Member',
-                initial: member.profile?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'TM',
-                linkedin: member.linkedin,
-                github: member.github,
-                department: member.department || member.profile?.department,
-                gradient: 'linear-gradient(135deg, #AD5CFF, #F97316)',
-                color: '#AD5CFF',
-              }}
-            />
-          ))}
-        </div>
+        {error && (
+          <div className="text-center py-4 px-4 rounded-lg border"
+            style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', color: '#EF4444', fontSize: '13px' }}>
+            {error}
+          </div>
+        )}
 
-        {teamMembers.length === 0 && (
+        {/* Team Grid */}
+        {teamMembers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teamMembers.map(member => {
+              const name = member.profile?.name || 'Team Member';
+              const slug = name.toLowerCase().replace(/\s+/g, '-');
+              return (
+                <MemberCard
+                  key={member.id}
+                  dev={{
+                    slug,
+                    name,
+                    role: member.role_title || member.profile?.role || 'Member',
+                    title: member.department || member.profile?.department || '',
+                    initial: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+                    photo: member.profile?.avatar_url || null,
+                    skills: member.skills ? member.skills.split(',').map(s => s.trim()) : [],
+                    linkedin: member.linkedin,
+                    github: member.github,
+                    gradient: 'linear-gradient(135deg, #AD5CFF, #F97316)',
+                    color: '#AD5CFF',
+                  }}
+                />
+              );
+            })}
+          </div>
+        ) : (
           <div className="text-center py-12">
             <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
               Team information coming soon!

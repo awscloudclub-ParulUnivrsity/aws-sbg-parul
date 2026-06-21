@@ -7,21 +7,20 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    this.state = { hasError: true, error, errorInfo };
+    this.setState({ error, errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ 
-          minHeight: '100vh', 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           background: '#070A13',
           color: '#fff',
@@ -30,9 +29,9 @@ class ErrorBoundary extends React.Component {
         }}>
           <div style={{ maxWidth: '600px', textAlign: 'center' }}>
             <h1 style={{ color: '#EF4444', marginBottom: '20px' }}>⚠️ Something went wrong</h1>
-            <pre style={{ 
-              background: '#111827', 
-              padding: '20px', 
+            <pre style={{
+              background: '#111827',
+              padding: '20px',
               borderRadius: '8px',
               textAlign: 'left',
               overflow: 'auto',
@@ -42,7 +41,7 @@ class ErrorBoundary extends React.Component {
               {'\n\n'}
               {this.state.errorInfo && this.state.errorInfo.componentStack}
             </pre>
-            <button 
+            <button
               onClick={() => window.location.href = '/'}
               style={{
                 marginTop: '20px',

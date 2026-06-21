@@ -12,6 +12,8 @@ import TeamPage from './pages/team/index';
 import DevProfilePage from './pages/team/[slug]';
 import NotFoundPage from './pages/404';
 import CertifyPage from './pages/certify/index';
+import PortalPage from './pages/portal/index';
+import VerifyPage from './pages/portal/verify';
 
 // Dashboard imports
 import DashboardLogin from './pages/dashboard/login';
@@ -26,7 +28,6 @@ import DashboardSettings from './pages/dashboard/settings';
 import DashboardBadge from './pages/dashboard/badge';
 
 export default function App() {
-  console.log('App component rendering');
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -39,7 +40,6 @@ export default function App() {
 }
 
 function AppShell() {
-  console.log('AppShell rendering');
   return (
     <>
       <ScrollToTop />
@@ -53,6 +53,8 @@ function AppShell() {
           <Route path="team" element={<TeamPage />} />
           <Route path="team/:slug" element={<DevProfilePage />} />
           <Route path="certify" element={<CertifyPage />} />
+          <Route path="portal" element={<PortalPage />} />
+          <Route path="portal/verify" element={<VerifyPage />} />
         </Route>
 
         {/* Dashboard login (public) */}
@@ -75,14 +77,9 @@ function AppShell() {
   );
 }
 
-// Scroll to top component
 function ScrollToTop() {
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
 

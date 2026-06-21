@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, ArrowUpRight, Users } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -6,23 +6,29 @@ import { supabase } from '../lib/supabase';
 
 const C = '#AD5CFF';
 
-function useEvents() {
+// ── Shared context so Home only fetches events ONCE ──────────────
+const EventsCtx = createContext({ upcoming: [], past: [], loading: true });
+
+export function EventsProvider({ children }) {
   const [upcoming, setUpcoming] = useState([]);
-  const [past, setPast] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [past,     setPast]     = useState([]);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     supabase.from('events').select('*').order('date', { ascending: false })
       .then(({ data }) => {
-        const events = data || [];
-        setUpcoming(events.filter(e => e.status === 'upcoming'));
-        setPast(events.filter(e => e.status === 'past'));
+        const ev = data || [];
+        setUpcoming(ev.filter(e => e.status === 'upcoming'));
+        setPast(ev.filter(e => e.status === 'past'));
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, []);
 
-  return { upcoming, past, loading };
+  return <EventsCtx.Provider value={{ upcoming, past, loading }}>{children}</EventsCtx.Provider>;
 }
+
+const useEvents = () => useContext(EventsCtx);
 
 /* ─────────────────────────────────────────
    UPCOMING EVENTS
@@ -84,8 +90,12 @@ export function UpcomingEvents() {
                   </p>
                   <div className="flex flex-wrap gap-x-5 gap-y-1.5 font-mono"
                     style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                    <span className="flex items-center gap-1.5"><Calendar size={11} style={{ color: C }} />{ev.date}</span>
-                    <span className="flex items-center gap-1.5"><MapPin size={11} style={{ color: '#F97316' }} />{ev.location}</span>
+                    <span className="flex items-center gap-1.5">
+                      <Calendar size={11} style={{ color: C }} />{ev.date}{ev.time ? ` · ${ev.time}` : ''}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin size={11} style={{ color: '#F97316' }} />{ev.location}
+                    </span>
                   </div>
                 </div>
                 <Link to="/events"
@@ -109,7 +119,7 @@ export function UpcomingEvents() {
 ───────────────────────────────────────── */
 function PastCard({ ev }) {
   const { dark } = useTheme();
-  const [imgFailed, setImgFailed] = React.useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <div className="rounded-xl border overflow-hidden flex flex-col transition-all duration-300"
@@ -137,7 +147,9 @@ function PastCard({ ev }) {
       <div className="p-4 flex flex-col gap-2 flex-1">
         <span className="font-mono font-bold uppercase" style={{ fontSize: '8px', color: C }}>{ev.type}</span>
         <h3 className="font-bold leading-snug" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{ev.title}</h3>
-        <p className="font-sans font-light leading-relaxed flex-1" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{ev.description}</p>
+        <p className="font-sans font-light leading-relaxed flex-1" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          {ev.description}
+        </p>
         <div className="flex flex-col gap-1 font-mono pt-1" style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>
           <span className="flex items-center gap-1.5"><Calendar size={9} style={{ color: C }} />{ev.date}</span>
           <span className="flex items-center gap-1.5"><MapPin size={9} style={{ color: C }} />{ev.location}</span>
@@ -185,62 +197,46 @@ export function PastEvents() {
 ───────────────────────────────────────── */
 const COLLABS = [
   {
-    name: 'AWS UG Ahmedabad',
-    handle: '@awsugahmedabad',
+    name: 'AWS UG Ahmedabad', handle: '@awsugahmedabad',
     desc: 'The Ahmedabad AWS User Group — one of the most active AWS communities in Gujarat, connecting cloud professionals, builders, and students across the city.',
-    url: 'https://www.meetup.com/amazon-web-services-ahmedabad/',
-    initial: 'AHM',
-    logo: '/logos/aws-ug-ahmedabad.png',
+    url: 'https://www.meetup.com/amazon-web-services-ahmedabad/', initial: 'AHM', logo: '/logos/aws-ug-ahmedabad.png',
   },
   {
-    name: 'AWS UG Vadodara',
-    handle: '@awsugvadodara',
+    name: 'AWS UG Vadodara', handle: '@awsugvadodara',
     desc: 'The Vadodara AWS User Group — our local chapter partner driving cloud adoption and knowledge sharing in the Baroda region, right in our backyard.',
-    url: 'https://www.meetup.com/awsugvadodara/',
-    initial: 'VDR',
-    logo: '/logos/aws-ug-vadodara.png',
+    url: 'https://www.meetup.com/awsugvadodara/', initial: 'VDR', logo: '/logos/aws-ug-vadodara.png',
   },
 ];
 
 function CollabCard({ collab }) {
-  const [imgFailed, setImgFailed] = React.useState(false);
-
+  const [imgFailed, setImgFailed] = useState(false);
   return (
     <div className="rounded-2xl border overflow-hidden flex flex-col md:flex-row transition-all duration-300"
       style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
       onMouseEnter={e => e.currentTarget.style.borderColor = C + '60'}
       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
-
       <div className="w-full md:w-1 md:h-auto h-1 flex-shrink-0"
         style={{ background: `linear-gradient(to bottom, ${C}, #F97316)` }} />
-
       <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
         <div className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border"
           style={{ background: C + '12', borderColor: C + '30' }}>
           {!imgFailed ? (
-            <img src={collab.logo} alt={collab.name}
-              className="w-full h-full object-contain p-2"
+            <img src={collab.logo} alt={collab.name} className="w-full h-full object-contain p-2"
               onError={() => setImgFailed(true)} />
           ) : (
             <span className="font-mono font-black text-xs" style={{ color: C }}>{collab.initial}</span>
           )}
         </div>
-
         <div className="flex-1 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-bold" style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
-              {collab.name}
-            </h3>
-            <span className="font-mono" style={{ fontSize: '10px', color: C }}>
-              {collab.handle}
-            </span>
+            <h3 className="font-bold" style={{ fontSize: '15px', color: 'var(--text-primary)' }}>{collab.name}</h3>
+            <span className="font-mono" style={{ fontSize: '10px', color: C }}>{collab.handle}</span>
           </div>
           <p className="font-sans font-light leading-relaxed"
             style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '480px' }}>
             {collab.desc}
           </p>
         </div>
-
         <a href={collab.url} target="_blank" rel="noreferrer"
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md font-mono font-bold uppercase no-underline transition-all flex-shrink-0 self-start sm:self-center"
           style={{ fontSize: '9px', color: C, border: '1px solid', borderColor: C + '40', background: C + '08' }}
@@ -269,19 +265,16 @@ export function CommunityCollabs() {
             We work alongside these AWS User Groups to connect our members with the wider Gujarat cloud ecosystem.
           </p>
         </div>
-
         <div className="space-y-5">
           {COLLABS.map(c => <CollabCard key={c.name} collab={c} />)}
         </div>
-
         <div className="mt-8 rounded-xl border p-5 flex items-center gap-4"
           style={{ background: C + '06', borderColor: C + '25' }}>
           <Users size={18} style={{ color: C, flexShrink: 0 }} />
           <p className="font-sans font-light" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             AWS User Groups are free, community-led groups open to everyone — students, professionals, and enthusiasts.{' '}
             <a href="https://aws.amazon.com/developer/community/usergroups/" target="_blank" rel="noreferrer"
-              className="no-underline font-semibold transition-colors"
-              style={{ color: C }}
+              className="no-underline font-semibold transition-colors" style={{ color: C }}
               onMouseEnter={e => e.currentTarget.style.color = '#9C47FF'}
               onMouseLeave={e => e.currentTarget.style.color = C}>
               Find your local group →

@@ -1,7 +1,7 @@
-import React from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Zap } from 'lucide-react';
-import { TEAM } from '../../data/team';
+import { supabase } from '../../lib/supabase';
 
 const GithubIcon = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
@@ -11,15 +11,79 @@ const GithubIcon = () => (
 
 export default function DevProfilePage() {
   const { slug } = useParams();
-  const dev = TEAM.find(d => d.slug === slug);
+  const [dev, setDev] = useState(null);
+  const [others, setOthers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!dev) return <Navigate to="/team" replace />;
+  useEffect(() => {
+    fetchMember();
+  }, [slug]);
 
-  const others = TEAM.filter(d => d.slug !== slug).slice(0, 3);
+  const fetchMember = async () => {
+    setLoading(true);
+    setNotFound(false);
+
+    const { data, error } = await supabase
+      .from('team_members')
+      .select(`*, profile:profiles(id, name, email, role, department, avatar_url, bio)`)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) { setNotFound(true); setLoading(false); return; }
+
+    // match by slug (name lowercased with hyphens)
+    const match = data.find(m => {
+      const name = m.profile?.name || '';
+      return name.toLowerCase().replace(/\s+/g, '-') === slug;
+    });
+
+    if (!match) { setNotFound(true); setLoading(false); return; }
+
+    const toDev = (m) => {
+      const name = m.profile?.name || 'Team Member';
+      return {
+        slug: name.toLowerCase().replace(/\s+/g, '-'),
+        name,
+        initial: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+        role: m.role_title || m.profile?.role || 'Member',
+        title: m.department || m.profile?.department || '',
+        photo: m.profile?.avatar_url || null,
+        bio: m.profile?.bio || '',
+        skills: m.skills ? m.skills.split(',').map(s => s.trim()) : [],
+        linkedin: m.linkedin || '',
+        github: m.github || '',
+        gradient: 'linear-gradient(135deg, #AD5CFF, #F97316)',
+        color: '#AD5CFF',
+      };
+    };
+
+    setDev(toDev(match));
+    setOthers(data.filter(m => m.id !== match.id).slice(0, 3).map(toDev));
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 pb-16 px-6 flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: '#AD5CFF', borderTopColor: 'transparent' }} />
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen pt-20 pb-16 px-6 flex flex-col items-center justify-center gap-4" style={{ background: 'var(--bg)' }}>
+        <p className="font-mono font-bold uppercase" style={{ fontSize: '12px', color: '#EF4444' }}>Profile not found</p>
+        <Link to="/team" className="font-mono font-bold uppercase no-underline" style={{ fontSize: '10px', color: '#AD5CFF' }}>
+          ← Back to Team
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-6 relative">
-
+    <div className="min-h-screen pt-20 pb-16 px-6 relative" style={{ background: 'var(--bg)' }}>
       <div className="relative z-10 max-w-4xl mx-auto space-y-8">
 
         {/* Breadcrumb */}
@@ -43,19 +107,24 @@ export default function DevProfilePage() {
         <div className="rounded-2xl border overflow-hidden"
           style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
 
-          {/* Gradient banner */}
           <div className="h-24 w-full relative" style={{ background: dev.gradient, opacity: 0.85 }}>
             <div className="site-grid-pattern absolute inset-0 opacity-20" />
           </div>
 
           <div className="px-6 pb-6">
-            {/* Avatar + identity */}
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-10 mb-6">
               <div className="flex items-end gap-4">
-                <div className="w-20 h-20 rounded-2xl border-4 flex items-center justify-center font-black text-white text-3xl flex-shrink-0"
-                  style={{ background: dev.gradient, borderColor: 'var(--card-bg)' }}>
-                  {dev.initial}
-                </div>
+                {dev.photo ? (
+                  <img src={dev.photo} alt={dev.name}
+                    className="w-20 h-20 rounded-2xl border-4 object-cover flex-shrink-0"
+                    style={{ borderColor: 'var(--card-bg)' }}
+                    onError={e => { e.target.style.display = 'none'; }} />
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl border-4 flex items-center justify-center font-black text-white text-3xl flex-shrink-0"
+                    style={{ background: dev.gradient, borderColor: 'var(--card-bg)' }}>
+                    {dev.initial}
+                  </div>
+                )}
                 <div className="pb-1">
                   <p className="font-mono font-bold uppercase tracking-widest"
                     style={{ fontSize: '9px', color: dev.color }}>
@@ -64,91 +133,100 @@ export default function DevProfilePage() {
                   <h1 className="font-extrabold text-2xl" style={{ color: 'var(--text-primary)' }}>
                     {dev.name}
                   </h1>
-                  <p className="font-sans" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {dev.title}
-                  </p>
+                  {dev.title && (
+                    <p className="font-sans" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {dev.title}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Social links */}
               <div className="flex gap-2 pb-1">
-                <a href={dev.linkedin} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-mono font-bold uppercase no-underline transition-all"
-                  style={{ fontSize: '9px', color: dev.color, borderColor: dev.color + '40', background: dev.color + '08' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = dev.color; e.currentTarget.style.color = '#fff'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = dev.color + '08'; e.currentTarget.style.color = dev.color; }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
-                    <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
-                  </svg>
-                  LinkedIn ↗
-                </a>
-                <a href={dev.github} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-mono font-bold uppercase no-underline transition-all"
-                  style={{ fontSize: '9px', color: 'var(--text-muted)', borderColor: 'var(--border-muted)', background: 'transparent' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-mid)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                  <GithubIcon /> GitHub ↗
-                </a>
+                {dev.linkedin && (
+                  <a href={dev.linkedin} target="_blank" rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-mono font-bold uppercase no-underline transition-all"
+                    style={{ fontSize: '9px', color: dev.color, borderColor: dev.color + '40', background: dev.color + '08' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = dev.color; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = dev.color + '08'; e.currentTarget.style.color = dev.color; }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
+                      <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+                    </svg>
+                    LinkedIn ↗
+                  </a>
+                )}
+                {dev.github && (
+                  <a href={dev.github} target="_blank" rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-mono font-bold uppercase no-underline transition-all"
+                    style={{ fontSize: '9px', color: 'var(--text-muted)', borderColor: 'var(--border-muted)', background: 'transparent' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-mid)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                    <GithubIcon /> GitHub ↗
+                  </a>
+                )}
               </div>
             </div>
 
-            {/* Bio */}
-            <p className="font-sans leading-relaxed"
-              style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '640px' }}>
-              {dev.bio}
-            </p>
+            {dev.bio && (
+              <p className="font-sans leading-relaxed"
+                style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '640px' }}>
+                {dev.bio}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Skills */}
-        <div className="rounded-xl border p-6 font-mono"
-          style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
-          <h2 className="font-bold uppercase tracking-widest mb-4 flex items-center gap-2"
-            style={{ fontSize: '10px', color: 'var(--text-primary)' }}>
-            <Zap size={12} style={{ color: dev.color }} /> TECH STACK
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {dev.skills.map(skill => (
-              <span key={skill} className="px-3 py-1.5 rounded-md border font-sans font-medium"
-                style={{ fontSize: '12px', background: dev.color + '10', borderColor: dev.color + '30', color: dev.color }}>
-                {skill}
-              </span>
-            ))}
+        {dev.skills.length > 0 && (
+          <div className="rounded-xl border p-6 font-mono"
+            style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
+            <h2 className="font-bold uppercase tracking-widest mb-4 flex items-center gap-2"
+              style={{ fontSize: '10px', color: 'var(--text-primary)' }}>
+              <Zap size={12} style={{ color: dev.color }} /> TECH STACK
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {dev.skills.map(skill => (
+                <span key={skill} className="px-3 py-1.5 rounded-md border font-sans font-medium"
+                  style={{ fontSize: '12px', background: dev.color + '10', borderColor: dev.color + '30', color: dev.color }}>
+                  {skill}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Other team members */}
-        <div>
-          <h2 className="font-mono font-bold uppercase tracking-widest mb-4"
-            style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-            OTHER BUILDERS
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {others.map(other => (
-              <Link key={other.slug} to={`/team/${other.slug}`}
-                className="rounded-xl border p-4 flex items-center gap-3 no-underline transition-all"
-                style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = other.color + '50'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
-                  style={{ background: other.gradient }}>
-                  {other.initial}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-mono font-bold truncate" style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
-                    {other.name}
-                  </p>
-                  <p className="font-sans truncate" style={{ fontSize: '10px', color: other.color }}>
-                    {other.role}
-                  </p>
-                </div>
-              </Link>
-            ))}
+        {others.length > 0 && (
+          <div>
+            <h2 className="font-mono font-bold uppercase tracking-widest mb-4"
+              style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+              OTHER BUILDERS
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {others.map(other => (
+                <Link key={other.slug} to={`/team/${other.slug}`}
+                  className="rounded-xl border p-4 flex items-center gap-3 no-underline transition-all"
+                  style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#AD5CFF50'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+                    style={{ background: other.gradient }}>
+                    {other.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono font-bold truncate" style={{ fontSize: '12px', color: 'var(--text-primary)' }}>
+                      {other.name}
+                    </p>
+                    <p className="font-sans truncate" style={{ fontSize: '10px', color: '#AD5CFF' }}>
+                      {other.role}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Back */}
         <Link to="/team"
           className="inline-flex items-center gap-2 font-mono font-bold uppercase no-underline transition-colors"
           style={{ fontSize: '10px', color: 'var(--text-muted)' }}

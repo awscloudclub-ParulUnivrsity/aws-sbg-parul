@@ -4,12 +4,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
 const navLinks = [
-  { label: 'Home',    href: '/',         internal: true },
-  { label: 'About',   href: '/about',    internal: true },
-  { label: 'Events',  href: '/events',   internal: true },
-  { label: 'Team',    href: '/team',     internal: true },
-  { label: 'Certify', href: '/certify',  internal: true },
-  { label: 'Contact', href: '/contact',  internal: true },
+  { label: 'Home',    href: '/'        },
+  { label: 'About',   href: '/about'   },
+  { label: 'Events',  href: '/events'  },
+  { label: 'Team',    href: '/team'    },
+  { label: 'Certify', href: '/certify' },
+  { label: 'Portal',  href: '/portal'  },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export function Navbar() {
@@ -21,7 +22,7 @@ export function Navbar() {
     ? { nav: 'rgba(7,10,19,0.88)', border: '#1E293B', text: '#94A3B8', mob: '#070A13' }
     : { nav: 'rgba(241,245,249,0.92)', border: '#CBD5E1', text: '#475569', mob: '#F8FAFC' };
 
-  const isActive = (href) => location.pathname === href;
+  const isActive = (href) => location.pathname === href || (href !== '/' && location.pathname.startsWith(href));
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 border-b backdrop-blur-md"
@@ -37,7 +38,7 @@ export function Navbar() {
               AWS Student Builder Group
             </span>
             <span className="font-bold uppercase tracking-widest leading-tight"
-              style={{ fontSize: '8px' }}>
+              style={{ fontSize: '8px', color: 'var(--text-muted)' }}>
               Parul University
             </span>
           </div>

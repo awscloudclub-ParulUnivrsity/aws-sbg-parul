@@ -18,25 +18,20 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
       setProfile(null);
     }
   };
 
   useEffect(() => {
-    console.log('AuthProvider initializing');
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session:', session);
       setUser(session?.user ?? null);
       if (session?.user) fetchProfile(session.user.id);
       setLoading(false);
-    }).catch(error => {
-      console.error('Session error:', error);
+    }).catch(() => {
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', _event, session);
       setUser(session?.user ?? null);
       if (session?.user) fetchProfile(session.user.id);
       else setProfile(null);
@@ -50,7 +45,6 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       return { data, error };
     } catch (error) {
-      console.error('Sign in error:', error);
       return { data: null, error };
     }
   };
@@ -63,7 +57,6 @@ export function AuthProvider({ children }) {
       });
       return { data, error };
     } catch (error) {
-      console.error('Sign up error:', error);
       return { data: null, error };
     }
   };
@@ -73,9 +66,7 @@ export function AuthProvider({ children }) {
       await supabase.auth.signOut();
       setUser(null);
       setProfile(null);
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+    } catch (error) {}
   };
 
   const refreshProfile = () => user && fetchProfile(user.id);
