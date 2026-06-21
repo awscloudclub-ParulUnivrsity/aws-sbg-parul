@@ -1,26 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, ArrowUpRight, Clock, Users } from 'lucide-react';
+import { Calendar, MapPin, ArrowUpRight, Users } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { supabase } from '../lib/supabase';
 
-const C = '#AD5CFF'; // single brand color for all cards
+const C = '#AD5CFF';
+
+function useEvents() {
+  const [upcoming, setUpcoming] = useState([]);
+  const [past, setPast] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from('events').select('*').order('date', { ascending: false })
+      .then(({ data }) => {
+        const events = data || [];
+        setUpcoming(events.filter(e => e.status === 'upcoming'));
+        setPast(events.filter(e => e.status === 'past'));
+        setLoading(false);
+      });
+  }, []);
+
+  return { upcoming, past, loading };
+}
 
 /* ─────────────────────────────────────────
    UPCOMING EVENTS
 ───────────────────────────────────────── */
-const UPCOMING = [
-  {
-    title: 'Explore Cloud With AWS',
-    type: 'Workshop',
-    date: 'MON, JUNE 8, 2026',
-    time: 'TBA',
-    location: 'Parul University, Vadodara',
-    desc: 'Explore the fundamentals of cloud computing with AWS — hands-on labs, live demos, and guided walkthroughs for students at all levels.',
-    href: '/events',
-  },
-];
-
 export function UpcomingEvents() {
+  const { upcoming, loading } = useEvents();
+
+  if (loading || upcoming.length === 0) return null;
+
   return (
     <section className="py-20 border-t" style={{ borderColor: 'var(--border-muted)' }}>
       <div className="max-w-6xl mx-auto px-6">
@@ -43,8 +54,8 @@ export function UpcomingEvents() {
         </div>
 
         <div className="space-y-5">
-          {UPCOMING.map(ev => (
-            <div key={ev.title}
+          {upcoming.map(ev => (
+            <div key={ev.id}
               className="rounded-2xl border overflow-hidden transition-all duration-300"
               style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C + '60'}
@@ -69,7 +80,7 @@ export function UpcomingEvents() {
                   </h3>
                   <p className="font-sans font-light leading-relaxed"
                     style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '560px' }}>
-                    {ev.desc}
+                    {ev.description}
                   </p>
                   <div className="flex flex-wrap gap-x-5 gap-y-1.5 font-mono"
                     style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
@@ -77,7 +88,7 @@ export function UpcomingEvents() {
                     <span className="flex items-center gap-1.5"><MapPin size={11} style={{ color: '#F97316' }} />{ev.location}</span>
                   </div>
                 </div>
-                <Link to={ev.href}
+                <Link to="/events"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-md font-mono font-bold uppercase text-white no-underline transition-all flex-shrink-0 self-start md:self-center"
                   style={{ fontSize: '10px', background: C, boxShadow: `0 0 20px ${C}30` }}
                   onMouseEnter={e => e.currentTarget.style.background = '#9C47FF'}
@@ -96,33 +107,6 @@ export function UpcomingEvents() {
 /* ─────────────────────────────────────────
    PAST EVENTS
 ───────────────────────────────────────── */
-const PAST = [
-  {
-    title: 'Cloud Verse 2.0',
-    type: 'Community Event',
-    date: 'MAR 2, 2026',
-    location: 'Parul University, Vadodara',
-    desc: 'The second edition of Cloud Verse — a community gathering celebrating cloud builders, live project showcases, and networking.',
-    photo: '/photos/events/cloud-verse-2.jpg',
-  },
-  {
-    title: 'AWS Academy & AWS Certification Bootcamp',
-    type: 'Bootcamp',
-    date: 'JAN 10, 2026',
-    location: 'Parul University, Vadodara',
-    desc: 'Intensive certification bootcamp covering AWS Academy curriculum and CLF-C02 exam preparation strategies.',
-    photo: '/photos/events/certification-bootcamp.jpg',
-  },
-  {
-    title: 'Introduction to AWS Academy',
-    type: 'Workshop',
-    date: 'DEC 26, 2025',
-    location: 'Parul University, Vadodara',
-    desc: 'Onboarding session introducing students to AWS Academy resources, learning paths, and cloud fundamentals.',
-    photo: '/photos/events/aws-academy-intro.jpg',
-  },
-];
-
 function PastCard({ ev }) {
   const { dark } = useTheme();
   const [imgFailed, setImgFailed] = React.useState(false);
@@ -135,7 +119,7 @@ function PastCard({ ev }) {
 
       <div className="relative overflow-hidden flex items-center justify-center"
         style={{ aspectRatio: '16/9', background: dark ? '#0D1117' : '#F1F5F9' }}>
-        {!imgFailed ? (
+        {ev.photo && !imgFailed ? (
           <img src={ev.photo} alt={ev.title}
             className="absolute inset-0 w-full h-full object-cover object-center"
             onError={() => setImgFailed(true)} />
@@ -153,7 +137,7 @@ function PastCard({ ev }) {
       <div className="p-4 flex flex-col gap-2 flex-1">
         <span className="font-mono font-bold uppercase" style={{ fontSize: '8px', color: C }}>{ev.type}</span>
         <h3 className="font-bold leading-snug" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{ev.title}</h3>
-        <p className="font-sans font-light leading-relaxed flex-1" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{ev.desc}</p>
+        <p className="font-sans font-light leading-relaxed flex-1" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{ev.description}</p>
         <div className="flex flex-col gap-1 font-mono pt-1" style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>
           <span className="flex items-center gap-1.5"><Calendar size={9} style={{ color: C }} />{ev.date}</span>
           <span className="flex items-center gap-1.5"><MapPin size={9} style={{ color: C }} />{ev.location}</span>
@@ -164,6 +148,10 @@ function PastCard({ ev }) {
 }
 
 export function PastEvents() {
+  const { past, loading } = useEvents();
+
+  if (loading || past.length === 0) return null;
+
   return (
     <section className="py-20 border-t" style={{ borderColor: 'var(--border-muted)' }}>
       <div className="max-w-6xl mx-auto px-6">
@@ -185,7 +173,7 @@ export function PastEvents() {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PAST.map(ev => <PastCard key={ev.title} ev={ev} />)}
+          {past.slice(0, 3).map(ev => <PastCard key={ev.id} ev={ev} />)}
         </div>
       </div>
     </section>
