@@ -59,7 +59,8 @@ export default function MembersPage() {
     setDeleting(true);
     
     try {
-      const memberEmail = members.find(m => m.id === deleteId)?.email;
+      const memberToDelete = members.find(m => m.id === deleteId);
+      const memberEmail = memberToDelete?.email;
       
       // Step 1: Delete related data first
       await supabase.from('team_members').delete().eq('profile_id', deleteId);
@@ -68,24 +69,26 @@ export default function MembersPage() {
         await supabase.from('certifications').delete().eq('email', memberEmail);
       }
       
-      // Step 2: Try to delete from auth.users (if service role available)
-      try {
-        const { error: authError } = await supabase.auth.admin.deleteUser(deleteId);
-        if (authError) throw authError;
-      } catch (authError) {
-        // If admin API fails, delete profile manually
-        console.warn('Admin API not available, deleting profile only:', authError);
-        await supabase.from('profiles').delete().eq('id', deleteId);
+      // Step 2: Delete profile
+      const { error: profileError } = await supabase.from('profiles').delete().eq('id', deleteId);
+      
+      if (profileError) {
+        throw profileError;
       }
       
+      // Success - user profile deleted
       setDeleteId(null);
       setDeleting(false);
       load();
+      
+      // Show success message
+      alert('User deleted successfully!\n\nNote: To fully remove the user from authentication, go to:\nSupabase Dashboard → Authentication → Users → Find "' + (memberToDelete?.name || memberEmail) + '" → Delete');
+      
     } catch (error) {
       console.error('Delete error:', error);
       setDeleting(false);
       setDeleteId(null);
-      alert('Delete failed: ' + error.message + '\n\nNote: User may still exist in authentication. Go to Supabase Dashboard → Authentication → Users to manually delete.');
+      alert('Delete failed: ' + error.message);
     }
   };
 
