@@ -75,7 +75,7 @@ export default function DashboardGuard({ children, requiredRoles }) {
     return <Navigate to="/dashboard/set-password" replace />;
   }
 
-  // Not approved yet
+  // Not approved yet - show once, don't refresh
   if (!profile.approved && profile.role !== 'leader') {
     return (
       <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
@@ -92,7 +92,7 @@ export default function DashboardGuard({ children, requiredRoles }) {
             <a href="/" className="inline-block font-mono font-bold uppercase no-underline transition-colors"
               style={{ fontSize: '10px', color: '#AD5CFF' }}>← Back to website</a>
             <span style={{ color: 'var(--text-muted)' }}>|</span>
-            <button onClick={signOut} className="font-mono font-bold uppercase transition-colors"
+            <button onClick={() => { signOut(); navigate('/dashboard/login'); }} className="font-mono font-bold uppercase transition-colors"
               style={{ fontSize: '10px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
               Logout
             </button>
