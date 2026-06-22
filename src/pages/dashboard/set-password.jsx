@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 const inp = {
@@ -17,14 +18,25 @@ const inp = {
 };
 
 export default function SetPassword() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
+  const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [show, setShow] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate('/dashboard/login', { replace: true });
+      } else if (profile && profile.password_set === true) {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,15 +52,13 @@ export default function SetPassword() {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
-      // Update password in auth
       const { error: updateError } = await supabase.auth.updateUser({ password });
       
       if (updateError) throw updateError;
 
-      // Update profile to mark password as set
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ password_set: true })
@@ -56,23 +66,38 @@ export default function SetPassword() {
 
       if (profileError) throw profileError;
 
-      // Refresh profile and navigate
       await refreshProfile();
       
-      // Small delay then reload to trigger guard check
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        navigate('/dashboard', { replace: true });
       }, 500);
     } catch (err) {
       setError(err.message);
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: '#AD5CFF', borderTopColor: 'transparent' }} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative"
       style={{ background: 'var(--bg)' }}>
       <div className="site-grid-pattern absolute inset-0 pointer-events-none opacity-60" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(173,92,255,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+
+      <button onClick={toggle}
+        className="absolute top-5 right-5 w-8 h-8 rounded-md border flex items-center justify-center"
+        style={{ background: 'transparent', borderColor: 'var(--border-muted)', color: 'var(--text-muted)' }}>
+        {dark ? <Sun size={14} /> : <Moon size={14} />}
+      </button>
       
       <div className="relative z-10 w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
@@ -142,15 +167,15 @@ export default function SetPassword() {
               </p>
             )}
 
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={submitting}
               className="w-full py-3 rounded-md font-mono font-bold uppercase text-white transition-all"
               style={{ 
                 fontSize: '11px', 
-                background: loading ? '#9C47FF' : '#AD5CFF', 
-                cursor: loading ? 'not-allowed' : 'pointer', 
+                background: submitting ? '#9C47FF' : '#AD5CFF', 
+                cursor: submitting ? 'not-allowed' : 'pointer', 
                 boxShadow: '0 0 20px rgba(173,92,255,0.2)' 
               }}>
-              {loading ? 'Setting Password...' : 'Set Password'}
+              {submitting ? 'Setting Password...' : 'Set Password'}
             </button>
           </form>
         </div>

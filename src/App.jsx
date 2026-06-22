@@ -58,9 +58,9 @@ function AppShell() {
           <Route path="portal/verify" element={<VerifyPage />} />
         </Route>
 
-        {/* Dashboard login (public) */}
+        {/* Dashboard login and set-password (semi-public) */}
         <Route path="/dashboard/login" element={<DashboardLogin />} />
-        <Route path="/dashboard/set-password" element={<DashboardGuard><SetPassword /></DashboardGuard>} />
+        <Route path="/dashboard/set-password" element={<SetPassword />} />
 
         {/* Protected dashboard routes */}
         <Route path="/dashboard" element={<DashboardGuard><DashboardLayout /></DashboardGuard>}>
