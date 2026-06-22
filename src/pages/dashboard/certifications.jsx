@@ -138,10 +138,10 @@ function CertCard({ c, onStatusChange }) {
                   style={{ fontSize: '9px', background: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
                   <CheckCircle size={11} /> {saving ? 'Saving...' : 'Approve'}
                 </button>
-                <button onClick={() => updateStatus('rejected')} disabled={saving}
+                <button onClick={() => updateStatus('pending')} disabled={saving}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
                   style={{ fontSize: '9px', background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', cursor: saving ? 'not-allowed' : 'pointer' }}>
-                  <XCircle size={11} /> Reject
+                  <XCircle size={11} /> Reset to Pending
                 </button>
               </>
             )}

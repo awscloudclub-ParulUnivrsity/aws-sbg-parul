@@ -65,7 +65,7 @@ create table if not exists public.certifications (
   result_url   text,
   photo_url    text,
   post_draft   text,
-  status       text default 'pending' check (status in ('pending','approved','posted')),
+  status       text default 'pending' check (status in ('pending','approved','posted','rejected')),
   created_at   timestamptz default now()
 );
 
@@ -94,17 +94,37 @@ create policy "Leader can update any profile"
 create policy "Events readable by all"
   on public.events for select using (true);
 
-create policy "Leader can manage events"
-  on public.events for all using (
-    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+create policy "Leader or technical can insert events"
+  on public.events for insert with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('leader','technical'))
+  );
+
+create policy "Leader or technical can update events"
+  on public.events for update using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('leader','technical'))
+  );
+
+create policy "Leader or technical can delete events"
+  on public.events for delete using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('leader','technical'))
   );
 
 -- TEAM MEMBERS policies
 create policy "Team members readable by all"
   on public.team_members for select using (true);
 
-create policy "Leader can manage team members"
-  on public.team_members for all using (
+create policy "Leader can insert team members"
+  on public.team_members for insert with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+  );
+
+create policy "Leader can update team members"
+  on public.team_members for update using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+  );
+
+create policy "Leader can delete team members"
+  on public.team_members for delete using (
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
   );
 
