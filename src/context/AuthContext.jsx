@@ -10,20 +10,29 @@ export function AuthProvider({ children }) {
 
   const fetchProfile = async (userId) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
+      
+      console.log('Profile fetched:', data);
       setProfile(data);
     } catch (error) {
+      console.error('Profile not found, may need to be created');
       setProfile(null);
     }
   };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
       setUser(session?.user ?? null);
       if (session?.user) fetchProfile(session.user.id);
       setLoading(false);
@@ -31,9 +40,14 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('Auth state changed:', _event, session?.user?.email);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) {
+        // Wait a bit for trigger to create profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await fetchProfile(session.user.id);
+      }
       else setProfile(null);
     });
 
