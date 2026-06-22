@@ -43,21 +43,28 @@ export default function SetPassword() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      // Update password in auth
+      const { error: updateError } = await supabase.auth.updateUser({ password });
       
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       // Update profile to mark password as set
-      await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ password_set: true })
         .eq('id', user.id);
 
+      if (profileError) throw profileError;
+
+      // Refresh profile and navigate
       await refreshProfile();
-      navigate('/dashboard');
+      
+      // Small delay then reload to trigger guard check
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
