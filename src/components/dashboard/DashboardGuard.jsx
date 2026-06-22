@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardGuard({ children, requiredRoles }) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
@@ -22,6 +22,11 @@ export default function DashboardGuard({ children, requiredRoles }) {
     </div>
   );
 
+  // Check if Google OAuth user needs to set password
+  if (profile && !profile.password_set && user?.app_metadata?.provider === 'google') {
+    return <Navigate to="/dashboard/set-password" replace />;
+  }
+
   // Not approved yet (only non-leaders need approval)
   if (!profile.approved && profile.role !== 'leader') return (
     <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
@@ -34,8 +39,15 @@ export default function DashboardGuard({ children, requiredRoles }) {
         <p className="font-sans font-light" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
           Your account is awaiting approval from the Chapter Lead. You'll get access once approved.
         </p>
-        <a href="/" className="inline-block font-mono font-bold uppercase no-underline transition-colors"
-          style={{ fontSize: '10px', color: '#AD5CFF' }}>← Back to website</a>
+        <div className="flex gap-2 justify-center">
+          <a href="/" className="inline-block font-mono font-bold uppercase no-underline transition-colors"
+            style={{ fontSize: '10px', color: '#AD5CFF' }}>← Back to website</a>
+          <span style={{ color: 'var(--text-muted)' }}>|</span>
+          <button onClick={signOut} className="font-mono font-bold uppercase transition-colors"
+            style={{ fontSize: '10px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );

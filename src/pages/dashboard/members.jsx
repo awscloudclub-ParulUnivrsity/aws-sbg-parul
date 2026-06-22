@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle, XCircle, Search, ChevronDown, Download, Trash2, Award, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Search, ChevronDown, Download, Trash2, Award, AlertTriangle, Lock, Unlock } from 'lucide-react';
 
 const ROLES = ['member', 'social_media', 'technical', 'operations', 'promotions', 'leader'];
 const DEPTS = ['General', 'Social Media', 'Technical', 'Operations', 'Promotions'];
@@ -25,11 +25,25 @@ export default function MembersPage() {
   const [deleting,  setDeleting]  = useState(false);
   const [badgeId,   setBadgeId]   = useState(null); // member id for badge preview
   const [copied,    setCopied]    = useState(null);
+  const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [toggling, setToggling] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     setMembers(data || []);
+    
+    // Load registration setting
+    const { data: setting } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'registration_enabled')
+      .single();
+    
+    if (setting) {
+      setRegistrationEnabled(setting.value.enabled);
+    }
+    
     setLoading(false);
   };
 
@@ -43,16 +57,61 @@ export default function MembersPage() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
-    // Remove from team first (FK constraint)
-    await supabase.from('team_members').delete().eq('profile_id', deleteId);
-    await supabase.from('certifications').delete().eq('email', members.find(m => m.id === deleteId)?.email || '');
-    const { error } = await supabase.from('profiles').delete().eq('id', deleteId);
-    if (error) {
-      alert('Delete failed: ' + error.message + '\n\nRun this in Supabase SQL Editor:\ndelete from auth.users where id = \'' + deleteId + '\';');
+    
+    try {
+      const memberEmail = members.find(m => m.id === deleteId)?.email;
+      
+      // Delete from team_members first (FK constraint)
+      await supabase.from('team_members').delete().eq('profile_id', deleteId);
+      
+      // Delete certifications
+      if (memberEmail) {
+        await supabase.from('certifications').delete().eq('email', memberEmail);
+      }
+      
+      // Delete from profiles
+      await supabase.from('profiles').delete().eq('id', deleteId);
+      
+      // Delete from auth.users (requires service role - this will cascade delete profile)
+      const { error: authError } = await supabase.auth.admin.deleteUser(deleteId);
+      
+      if (authError) {
+        console.error('Auth delete error:', authError);
+        alert('User deleted from profiles but auth cleanup failed. Run in Supabase SQL:\nDELETE FROM auth.users WHERE id = \'' + deleteId + '\'');
+      }
+      
+      setDeleteId(null);
+      load();
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Delete failed: ' + error.message);
+    } finally {
+      setDeleting(false);
     }
-    setDeleting(false);
-    setDeleteId(null);
-    load();
+  };
+
+  const toggleRegistration = async () => {
+    if (!isLeader) return;
+    setToggling(true);
+    
+    const newValue = !registrationEnabled;
+    
+    const { error } = await supabase
+      .from('settings')
+      .upsert({
+        key: 'registration_enabled',
+        value: { enabled: newValue },
+        updated_at: new Date().toISOString(),
+        updated_by: me.id
+      }, { onConflict: 'key' });
+    
+    if (error) {
+      alert('Failed to update setting: ' + error.message);
+    } else {
+      setRegistrationEnabled(newValue);
+    }
+    
+    setToggling(false);
   };
 
   const sendBadgeLink = (m) => {
@@ -88,6 +147,39 @@ export default function MembersPage() {
 
   return (
     <div className="space-y-5">
+
+      {/* Registration Toggle (Leader Only) */}
+      {isLeader && (
+        <div className="rounded-xl border p-4 flex items-center justify-between"
+          style={{ background: registrationEnabled ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)', borderColor: registrationEnabled ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ background: registrationEnabled ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)' }}>
+              {registrationEnabled ? <Unlock size={18} style={{ color: '#22C55E' }} /> : <Lock size={18} style={{ color: '#EF4444' }} />}
+            </div>
+            <div>
+              <h3 className="font-mono font-bold uppercase" style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
+                New User Registration
+              </h3>
+              <p className="font-sans" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {registrationEnabled ? 'New users can request access via Google OAuth' : 'Registration is disabled - only existing users can login'}
+              </p>
+            </div>
+          </div>
+          <button onClick={toggleRegistration} disabled={toggling}
+            className="px-4 py-2 rounded-md font-mono font-bold uppercase transition-all"
+            style={{
+              fontSize: '10px',
+              background: registrationEnabled ? '#EF4444' : '#22C55E',
+              color: '#fff',
+              border: 'none',
+              cursor: toggling ? 'not-allowed' : 'pointer',
+              opacity: toggling ? 0.7 : 1
+            }}>
+            {toggling ? 'Updating...' : registrationEnabled ? 'Disable' : 'Enable'}
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center justify-between">

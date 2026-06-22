@@ -61,6 +61,20 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -72,7 +86,7 @@ export function AuthProvider({ children }) {
   const refreshProfile = () => user && fetchProfile(user.id);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signInWithGoogle, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

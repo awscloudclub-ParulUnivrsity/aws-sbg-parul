@@ -17,6 +17,7 @@ import VerifyPage from './pages/portal/verify';
 
 // Dashboard imports
 import DashboardLogin from './pages/dashboard/login';
+import SetPassword from './pages/dashboard/set-password';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import DashboardGuard from './components/dashboard/DashboardGuard';
 import DashboardOverview from './pages/dashboard/index';
@@ -59,6 +60,7 @@ function AppShell() {
 
         {/* Dashboard login (public) */}
         <Route path="/dashboard/login" element={<DashboardLogin />} />
+        <Route path="/dashboard/set-password" element={<DashboardGuard><SetPassword /></DashboardGuard>} />
 
         {/* Protected dashboard routes */}
         <Route path="/dashboard" element={<DashboardGuard><DashboardLayout /></DashboardGuard>}>
