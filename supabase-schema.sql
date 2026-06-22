@@ -90,6 +90,11 @@ create policy "Leader can update any profile"
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
   );
 
+create policy "Leader can delete any profile"
+  on public.profiles for delete using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+  );
+
 -- EVENTS policies
 create policy "Events readable by all"
   on public.events for select using (true);

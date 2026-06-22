@@ -43,8 +43,13 @@ export default function MembersPage() {
   const confirmDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
+    // Remove from team first (FK constraint)
     await supabase.from('team_members').delete().eq('profile_id', deleteId);
-    await supabase.from('profiles').delete().eq('id', deleteId);
+    await supabase.from('certifications').delete().eq('email', members.find(m => m.id === deleteId)?.email || '');
+    const { error } = await supabase.from('profiles').delete().eq('id', deleteId);
+    if (error) {
+      alert('Delete failed: ' + error.message + '\n\nRun this in Supabase SQL Editor:\ndelete from auth.users where id = \'' + deleteId + '\';');
+    }
     setDeleting(false);
     setDeleteId(null);
     load();
