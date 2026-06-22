@@ -24,10 +24,11 @@ export default function TeamManagePage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('team_members')
       .select('*, profile:profiles(id,name,email,role,avatar_url)')
       .order('created_at', { ascending: true });
+    if (error) console.error('team_members load error:', error);
     setTeam(data || []);
     setLoading(false);
   };
@@ -36,11 +37,11 @@ export default function TeamManagePage() {
 
   const add = async () => {
     setSaving(true); setErr('');
-    const { data: found } = await supabase.from('profiles').select('id').eq('email', form.email.trim()).single();
+    const { data: found } = await supabase.from('profiles').select('id').eq('email', form.email.trim()).maybeSingle();
     if (!found) { setErr('No account found with that email. Ask them to sign up first.'); setSaving(false); return; }
 
     // Check if already in team
-    const { data: existing } = await supabase.from('team_members').select('id').eq('profile_id', found.id).single();
+    const { data: existing } = await supabase.from('team_members').select('id').eq('profile_id', found.id).maybeSingle();
     if (existing) { setErr('This person is already in the core team.'); setSaving(false); return; }
 
     const { error } = await supabase.from('team_members').insert({
