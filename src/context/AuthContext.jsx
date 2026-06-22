@@ -8,16 +8,25 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId) => {
+  const fetchProfile = async (userId, retryCount = 0) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      setProfile(data);
+      
+      if (data) {
+        setProfile(data);
+      } else if (retryCount < 2) {
+        // Retry after 2 seconds if profile not found
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return fetchProfile(userId, retryCount + 1);
+      } else {
+        setProfile(null);
+      }
     } catch (error) {
       setProfile(null);
     }
@@ -35,7 +44,8 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Small delay for trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
@@ -71,7 +81,12 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/dashboard`,
+          skipBrowserRedirect: false,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       return { data, error };
