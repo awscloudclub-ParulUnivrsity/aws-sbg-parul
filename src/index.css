@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root, [data-theme="dark"] {
+  --bg:           #070A13;
+  --surface-low:  #111827;
+  --surface-mid:  #161F30;
+  --surface-high: #1F2937;
+  --border-muted: #1E293B;
+  --border-active:#2E3F59;
+  --text-primary: #FFFFFF;
+  --text-muted:   #94A3B8;
+  --text-subtle:  #64748B;
+  --card-bg:      #111827;
+  --nav-bg:       rgba(7,10,19,0.88);
+  --grid-line:    rgba(130, 145, 165, 0.289);
+}
+
+[data-theme="light"] {
+  --bg:           #F1F5F9;
+  --surface-low:  #FFFFFF;
+  --surface-mid:  #F8FAFC;
+  --surface-high: #E2E8F0;
+  --border-muted: #CBD5E1;
+  --border-active:#94A3B8;
+  --text-primary: #0F172A;
+  --text-muted:   #475569;
+  --text-subtle:  #94A3B8;
+  --card-bg:      #FFFFFF;
+  --nav-bg:       rgba(241,245,249,0.92);
+  --grid-line:    rgba(100,116,139,0.15);
+}
+
+@theme {
+  --color-brand-purple:       #AD5CFF;
+  --color-brand-purple-hover: #9C47FF;
+  --color-brand-orange:       #F97316;
+  --color-brand-cyan:         #06B6D4;
+  --font-sans: "Inter", "Geist", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: "Inter", "Geist", sans-serif;
+  margin: 0;
+}
+
+.site-grid-pattern {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  pointer-events: none;
+}
+
+.text-shimmer {
+  background: linear-gradient(to right, #ffffff 20%, #AD5CFF 40%, #F97316 60%, #ffffff 80%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 5s linear infinite;
+}
+
+[data-theme="light"] .text-shimmer {
+  background: linear-gradient(to right, #0F172A 20%, #AD5CFF 40%, #F97316 60%, #0F172A 80%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes shine { to { background-position: 200% center; } }
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 2px; }
+
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
