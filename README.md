@@ -1,219 +1,113 @@
-# AWS SBG Parul University Website
+# AWS SBG Parul University — Monorepo
 
-Official website for AWS Student Builder Group at Parul University with dynamic content management and certification tracking.
+Welcome to the official repository of the AWS Student Builder Group at Parul University. This project is structured as a modern full-stack monorepo featuring a React frontend, an Express API backend, and a Neon PostgreSQL database managed via Prisma.
 
-## 🚀 Features
+## 📁 Repository Structure
 
-### Public Website
-- **Dynamic Events Page** - Real-time events from database
-- **Dynamic Team Page** - Auto-updated team member profiles
-- **Certification Submission** - Native form with file uploads
-- **Responsive Design** - Mobile-first with dark/light themes
-- **Modern UI** - Clean design with Lucide icons
-
-### Admin Dashboard
-- **Member Management** - Approve/reject, assign roles
-- **Events Management** - Create, edit, delete events
-- **Team Management** - Add core team members
-- **Certification Review** - Review submissions, generate posts
-- **Role-Based Access** - Leader, Technical, Social Media, Operations, Member
-- **Digital Badge** - Downloadable member badges
-
-## 🛠️ Tech Stack
-
-- **Frontend:** React 19 + Vite
-- **Routing:** React Router v7
-- **Styling:** Tailwind CSS v4 + CSS-in-JS
-- **Icons:** Lucide React
-- **Backend:** Supabase (PostgreSQL + Storage)
-- **Auth:** Supabase Auth with RLS
-
-## 📦 Quick Start
-
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Configure Environment
-Create `.env` file:
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-```
-
-### 3. Setup Database
-1. Go to Supabase Dashboard → SQL Editor
-2. Run `supabase-schema.sql`
-3. Run `storage-setup.sql`
-4. (Optional) Run `sample-data.sql` for test data
-
-### 4. Create Leader Account
-1. Sign up at `/dashboard/login`
-2. In Supabase SQL Editor:
-```sql
-UPDATE public.profiles 
-SET role = 'leader', approved = true
-WHERE email = 'your@email.com';
-```
-
-### 5. Start Development
-```bash
-npm run dev
-```
-
-## 📋 Setup Guide
-
-**Follow the step-by-step guide:** See `SETUP_CHECKLIST.md`
-
-**Detailed features info:** See `DYNAMIC_FEATURES.md`
-
-**Dashboard documentation:** See `DASHBOARD_README.md`
-
-## 🎯 Key Routes
-
-### Public Routes
-- `/` - Home page
-- `/events` - Dynamic events listing
-- `/team` - Dynamic team members
-- `/certify` - Certification submission form
-- `/about` - About page
-- `/contact` - Contact page
-
-### Dashboard Routes (Protected)
-- `/dashboard/login` - Sign in / Sign up
-- `/dashboard` - Overview (all roles)
-- `/dashboard/members` - Manage members (leader, operations)
-- `/dashboard/team` - Manage core team (leader)
-- `/dashboard/events` - Manage events (leader, technical)
-- `/dashboard/certifications` - Review certs (leader, social_media)
-- `/dashboard/badge` - Digital badge (member)
-- `/dashboard/settings` - Profile settings (all roles)
-
-## 👥 User Roles
-
-| Role | Access |
-|------|--------|
-| **Leader** | Full access to all features |
-| **Technical** | Events management |
-| **Social Media** | Certification review |
-| **Operations** | Member management |
-| **Promotions** | Certification review |
-| **Member** | Badge, settings |
-
-## 📁 Project Structure
+This project uses npm workspaces to manage its packages and apps inside a single repository:
 
 ```
-src/
-├── components/
-│   ├── dashboard/       # Dashboard components
-│   ├── Navbar.jsx       # Navigation
-│   ├── Footer.jsx       # Footer
-│   └── MemberCard.jsx   # Team member card
-├── context/
-│   ├── AuthContext.jsx  # Authentication state
-│   └── ThemeContext.jsx # Theme management
-├── pages/
-│   ├── Home.jsx         # Landing page
-│   ├── events/          # Events page
-│   ├── team/            # Team page
-│   ├── certify/         # Certification form
-│   └── dashboard/       # Dashboard pages
-├── lib/
-│   └── supabase.js      # Supabase client
-└── App.jsx              # Routes
+├── apps/
+│   ├── frontend/        # React + Vite (SPA frontend client)
+│   └── backend/         # Express REST API (Database access and authorization)
+├── database/
+│   └── prisma/          # Prisma schema, migrations, and seeding scripts
+├── docs/                # Project audits, checklists, and documentation
+├── package.json         # Root configuration and scripts
+└── .env                 # Unified environment variables
 ```
-
-## 🔒 Security Features
-
-- Row Level Security (RLS) on all tables
-- Role-based access control
-- Email verification (optional)
-- Secure file uploads
-- Protected dashboard routes
-
-## 📝 Environment Variables
-
-```env
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
-```
-
-## 🧪 Testing
-
-See `TESTING_CHECKLIST.md` for comprehensive testing guide.
-
-## 📄 Additional Documentation
-
-- `SETUP_CHECKLIST.md` - Step-by-step setup guide
-- `DYNAMIC_FEATURES.md` - Dynamic features documentation
-- `DASHBOARD_README.md` - Dashboard features guide
-- `DASHBOARD_UPDATES.md` - Dashboard update logs
-- `QUICK_REFERENCE.md` - Quick reference guide
-- `supabase-schema.sql` - Database schema
-- `storage-setup.sql` - Storage bucket setup
-- `sample-data.sql` - Sample data for testing
-
-## 🚀 Deployment
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Preview Production Build
-```bash
-npm run preview
-```
-
-### Deploy to Vercel
-```bash
-vercel deploy
-```
-
-Or connect your GitHub repo to Vercel for automatic deployments.
-
-## 🐛 Troubleshooting
-
-**Events not showing?**
-- Check database has events in `events` table
-- Verify RLS policies allow public read
-
-**Can't upload files?**
-- Ensure storage bucket `certifications` exists
-- Check bucket is public
-- Verify file size < 1MB
-
-**Email not confirmed error?**
-- Disable email confirmation in Supabase Auth settings
-
-## 📞 Support
-
-For issues:
-1. Check browser console (F12) for errors
-2. Check Supabase logs
-3. Review documentation files
-4. Contact AWS SBG team
-
-## 📜 License
-
-MIT License - AWS Student Builder Group, Parul University
 
 ---
 
-## React + Vite
+## 🛠️ Tech Stack
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- **Frontend Client:** React 19, Vite, Tailwind CSS v4, Lucide Icons
+- **Backend API:** Express, Helmet (headers security), CORS, Node.js
+- **Database Layer:** Neon PostgreSQL, Prisma ORM
+- **Auth & Storage:** Supabase Auth (client JWTs) & Supabase Storage (binary uploads)
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📋 Hybrid Architecture
 
-## React Compiler
+This application employs a highly secure hybrid architecture:
+1. **Authentication & Storage:** Handled directly on the frontend client using the Supabase JS SDK. Clients authenticate with Supabase Auth and retrieve JWT session tokens, and upload certificate images directly to Supabase Storage.
+2. **Database & Business Logic:** Restricted from client-side direct access. The frontend client sends the Supabase JWT token in the `Authorization: Bearer <token>` header of REST API calls to the Express backend.
+3. **Backend Middleware:** The Express backend extracts the token, verifies it against Supabase Auth, resolves the user metadata, syncs/verifies the user profile with Neon PostgreSQL, and checks the user's role before processing the request.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Prerequisite Installations
+Ensure you have **Node.js (v18+)** and **npm (v9+)** installed on your system.
+
+### 2. Configure Environment Variables
+Create a `.env` file at the root of the repository with the following structure:
+```env
+# Supabase Configuration (Client Auth & Storage)
+VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Database Connection (Neon PostgreSQL)
+DATABASE_URL=postgresql://user:password@neon-host/dbname?sslmode=require
+
+# Backend Options (Optional)
+PORT=5000
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
+```
+
+### 3. Install Workspace Dependencies
+Install dependencies for all workspaces synchronously from the monorepo root:
+```bash
+npm install
+```
+*Note: This will trigger a `postinstall` script to automatically generate the Prisma Client.*
+
+### 4. Database Setup & Seeding
+If you are setting up the database for the first time, push the schema to Neon PostgreSQL:
+```bash
+npm run db:push --workspace=database
+```
+
+---
+
+## 💻 Development Commands
+
+All commands can be run from the root directory:
+
+| Command | Action |
+|---------|--------|
+| `npm run dev` | Runs both Frontend and Backend concurrently |
+| `npm run dev:frontend` | Runs the Vite dev server only |
+| `npm run dev:backend` | Runs the nodemon Express server only |
+| `npm run build` | Builds the React frontend application for production |
+| `npm run generate` | Regenerates the Prisma Client |
+
+---
+
+## 🔒 Production Security Hardening
+
+- **Helmet Integration:** Express routes are guarded with Helmet headers to prevent standard cross-site scripting (XSS) and clickjacking attacks.
+- **Dynamic CORS Controls:** Limits API access strictly to designated production domains and local development environments.
+- **Sanitized Errors:** Internal SQL and schema error stacks are logged exclusively to the server stdout, shielding the client from internal database layouts.
+- **Cascaded Relations:** Nullable foreign keys in the Prisma schema are configured with `onDelete: SetNull` or `onDelete: Cascade` to prevent foreign key errors when deleting users.
+- **Registration Controls:** The backend checks `registration_enabled` setting on signup. If disabled, new OAuth or credentials signups are blocked in the backend.
+
+---
+
+## 👥 User Roles & Access Control
+
+| Role | Access Permissions |
+|------|--------------------|
+| **Leader** | Full access to settings, members, teams, events, and certifications |
+| **Technical** | Access to create, update, and delete events |
+| **Social Media** | Access to read, review, and draft posts for certifications |
+| **Operations** | Access to view and approve member registrations |
+| **Member** | Access to download digital badges and edit personal profiles |
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. Created by AWS Student Builder Group, Parul University.
