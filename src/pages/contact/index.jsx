@@ -6,7 +6,7 @@ const socials = [
   {
     label: 'LinkedIn',
     handle: 'AWS SBG Parul University',
-    url: 'https://linkedin.com',
+    url: 'https://www.linkedin.com/company/aws-student-builder-group-parul-university/',
     color: '#0A66C2',
     icon: () => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -17,8 +17,8 @@ const socials = [
   },
   {
     label: 'Instagram',
-    handle: '@awssbgpu',
-    url: 'https://instagram.com',
+    handle: '@aws.sbg_pu',
+    url: 'https://www.instagram.com/aws.sbg_pu/',
     color: '#E1306C',
     icon: () => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,7 +49,7 @@ export default function ContactPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Opens mailto as a simple no-backend solution
-    const mailto = `mailto:awssbgpu@gmail.com?subject=${encodeURIComponent(form.subject || 'Contact from Website')}&body=${encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)}`;
+    const mailto = `mailto:awscloudclub@paruluniversity.ac.in?subject=${encodeURIComponent(form.subject || 'Contact from Website')}&body=${encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)}`;
     window.location.href = mailto;
     setSent(true);
   };
@@ -108,12 +108,12 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>Email</p>
-                  <a href="mailto:awssbgpu@gmail.com"
+                  <a href="mailto:awscloudclub@paruluniversity.ac.in"
                     className="font-sans no-underline transition-colors"
                     style={{ fontSize: '13px', color: 'var(--text-primary)' }}
                     onMouseEnter={e => e.currentTarget.style.color = '#AD5CFF'}
                     onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}>
-                    awssbgpu@gmail.com
+                    awscloudclub@paruluniversity.ac.in
                   </a>
                 </div>
               </div>
@@ -127,6 +127,7 @@ export default function ContactPage() {
                   <p className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>Location</p>
                   <p className="font-sans" style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.6 }}>
                     Parul University<br />
+                    L103, C.V. Raman Building<br />
                     Vadodara, Gujarat, India
                   </p>
                 </div>
@@ -177,7 +178,7 @@ export default function ContactPage() {
                   <div>
                     <p className="font-bold font-mono uppercase" style={{ color: 'var(--text-primary)' }}>Message Ready</p>
                     <p className="font-sans font-light mt-1" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                      Your email client should have opened. If not, email us directly at awssbgpu@gmail.com
+                      Your email client should have opened. If not, email us directly at awscloudclub@paruluniversity.ac.in
                     </p>
                   </div>
                   <button onClick={() => setSent(false)}

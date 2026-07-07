@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -10,18 +11,10 @@ export function AuthProvider({ children }) {
 
   const fetchProfile = async (userId, retryCount = 0) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) throw error;
-      
+      const data = await api.getMe();
       if (data) {
         setProfile(data);
       } else if (retryCount < 2) {
-        // Retry after 2 seconds if profile not found
         await new Promise(resolve => setTimeout(resolve, 2000));
         return fetchProfile(userId, retryCount + 1);
       } else {
@@ -33,6 +26,11 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchProfile(session.user.id);
@@ -44,7 +42,6 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Small delay for trigger to complete
         await new Promise(resolve => setTimeout(resolve, 1000));
         await fetchProfile(session.user.id);
       } else {
@@ -56,6 +53,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = async (email, password) => {
+    if (!supabase) return { data: null, error: new Error('Supabase is not configured') };
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       return { data, error };
@@ -65,6 +63,7 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async (email, password, name) => {
+    if (!supabase) return { data: null, error: new Error('Supabase is not configured') };
     try {
       const { data, error } = await supabase.auth.signUp({
         email, password,
@@ -77,6 +76,7 @@ export function AuthProvider({ children }) {
   };
 
   const signInWithGoogle = async () => {
+    if (!supabase) return { data: null, error: new Error('Supabase is not configured') };
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -96,6 +96,11 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      setUser(null);
+      setProfile(null);
+      return;
+    }
     try {
       await supabase.auth.signOut();
       setUser(null);

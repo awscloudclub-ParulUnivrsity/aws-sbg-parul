@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { api } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 
 const inp = {
@@ -46,7 +47,6 @@ export default function SetPassword() {
       setError('Password must be at least 6 characters');
       return;
     }
-
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -56,18 +56,11 @@ export default function SetPassword() {
 
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
-      
       if (updateError) throw updateError;
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ password_set: true })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
+      await api.updateMe({ password_set: true });
       await refreshProfile();
-      
+
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
       }, 500);
@@ -98,7 +91,7 @@ export default function SetPassword() {
         style={{ background: 'transparent', borderColor: 'var(--border-muted)', color: 'var(--text-muted)' }}>
         {dark ? <Sun size={14} /> : <Moon size={14} />}
       </button>
-      
+
       <div className="relative z-10 w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <img src="/SBGLOGO.png" alt="SBG" className="h-10 w-auto object-contain mx-auto" />
@@ -110,25 +103,16 @@ export default function SetPassword() {
           </p>
         </div>
 
-        <div className="rounded-2xl border p-6"
-          style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
-          
+        <div className="rounded-2xl border p-6" style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1">
-              <label className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                Password
-              </label>
+              <label className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Password</label>
               <div className="relative">
-                <input 
-                  required 
-                  type={show ? 'text' : 'password'} 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••" 
+                <input required type={show ? 'text' : 'password'} value={password}
+                  onChange={e => setPassword(e.target.value)} placeholder="••••••••"
                   style={{ ...inp, paddingRight: '40px' }}
                   onFocus={e => e.target.style.borderColor = '#AD5CFF'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border-muted)'} 
-                />
+                  onBlur={e => e.target.style.borderColor = 'var(--border-muted)'} />
                 <button type="button" onClick={() => setShow(!show)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)' }}>
@@ -138,20 +122,13 @@ export default function SetPassword() {
             </div>
 
             <div className="space-y-1">
-              <label className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                Confirm Password
-              </label>
+              <label className="font-mono font-bold uppercase" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Confirm Password</label>
               <div className="relative">
-                <input 
-                  required 
-                  type={showConfirm ? 'text' : 'password'} 
-                  value={confirmPassword} 
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••" 
+                <input required type={showConfirm ? 'text' : 'password'} value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••"
                   style={{ ...inp, paddingRight: '40px' }}
                   onFocus={e => e.target.style.borderColor = '#AD5CFF'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border-muted)'} 
-                />
+                  onBlur={e => e.target.style.borderColor = 'var(--border-muted)'} />
                 <button type="button" onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-subtle)' }}>
@@ -169,12 +146,7 @@ export default function SetPassword() {
 
             <button type="submit" disabled={submitting}
               className="w-full py-3 rounded-md font-mono font-bold uppercase text-white transition-all"
-              style={{ 
-                fontSize: '11px', 
-                background: submitting ? '#9C47FF' : '#AD5CFF', 
-                cursor: submitting ? 'not-allowed' : 'pointer', 
-                boxShadow: '0 0 20px rgba(173,92,255,0.2)' 
-              }}>
+              style={{ fontSize: '11px', background: submitting ? '#9C47FF' : '#AD5CFF', cursor: submitting ? 'not-allowed' : 'pointer', boxShadow: '0 0 20px rgba(173,92,255,0.2)' }}>
               {submitting ? 'Setting Password...' : 'Set Password'}
             </button>
           </form>

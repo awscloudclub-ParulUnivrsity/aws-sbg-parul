@@ -8,9 +8,9 @@ const navLinks = [
   { label: 'About',   href: '/about'   },
   { label: 'Events',  href: '/events'  },
   { label: 'Team',    href: '/team'    },
-  { label: 'Certify', href: '/certify' },
-  { label: 'Portal',  href: '/portal'  },
-  { label: 'Contact', href: '/contact' },
+  { label: 'Certify',    href: '/certify'    },
+  { label: 'Certified',  href: '/certified'  },
+  { label: 'Contact',    href: '/contact'    },
 ];
 
 export function Navbar() {

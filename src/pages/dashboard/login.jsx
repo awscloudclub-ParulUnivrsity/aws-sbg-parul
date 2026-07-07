@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 const inp = {
   width: '100%',
@@ -32,16 +32,17 @@ export default function DashboardLogin() {
 
   useEffect(() => {
     const checkRegistration = async () => {
-      const { data } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'registration_enabled')
-        .single();
-      
-      if (data) {
-        setRegistrationEnabled(data.value.enabled);
+      try {
+        const data = await api.getSetting('registration_enabled');
+        if (data && data.value) {
+          setRegistrationEnabled(data.value.enabled !== false);
+        }
+      } catch (err) {
+        // default to enabled if backend unreachable
+        setRegistrationEnabled(true);
+      } finally {
+        setCheckingRegistration(false);
       }
-      setCheckingRegistration(false);
     };
     checkRegistration();
   }, []);
@@ -58,10 +59,6 @@ export default function DashboardLogin() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!registrationEnabled) {
-      setError('New user registration is currently disabled. Please contact the administrator.');
-      return;
-    }
     setError('');
     const { error } = await signInWithGoogle();
     if (error) setError(error.message);
@@ -74,7 +71,6 @@ export default function DashboardLogin() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(173,92,255,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
 
-      {/* Theme toggle */}
       <button onClick={toggle}
         className="absolute top-5 right-5 w-8 h-8 rounded-md border flex items-center justify-center"
         style={{ background: 'transparent', borderColor: 'var(--border-muted)', color: 'var(--text-muted)' }}>
@@ -83,7 +79,6 @@ export default function DashboardLogin() {
 
       <div className="relative z-10 w-full max-w-md space-y-6">
 
-        {/* Logo */}
         <div className="text-center space-y-2">
           <img src="/SBGLOGO.png" alt="SBG" className="h-10 w-auto object-contain mx-auto" />
           <h1 className="font-extrabold uppercase text-xl" style={{ color: 'var(--text-primary)' }}>
@@ -94,7 +89,6 @@ export default function DashboardLogin() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="rounded-2xl border p-6 space-y-4"
           style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
 
@@ -136,7 +130,6 @@ export default function DashboardLogin() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full" style={{ borderTop: '1px solid var(--border-muted)' }} />
@@ -146,7 +139,6 @@ export default function DashboardLogin() {
             </div>
           </div>
 
-          {/* Google Sign In */}
           {checkingRegistration ? (
             <div className="py-3 text-center">
               <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin mx-auto"
@@ -166,13 +158,7 @@ export default function DashboardLogin() {
             <>
               <button type="button" onClick={handleGoogleSignIn}
                 className="w-full py-3 rounded-md font-mono font-bold uppercase transition-all flex items-center justify-center gap-2"
-                style={{
-                  fontSize: '11px',
-                  background: 'transparent',
-                  border: '1px solid var(--border-muted)',
-                  color: 'var(--text-primary)',
-                  cursor: 'pointer'
-                }}
+                style={{ fontSize: '11px', background: 'transparent', border: '1px solid var(--border-muted)', color: 'var(--text-primary)', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = '#AD5CFF'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-muted)'}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -183,7 +169,6 @@ export default function DashboardLogin() {
                 </svg>
                 Continue with Google
               </button>
-
               <p className="font-sans text-center" style={{ fontSize: '11px', color: 'var(--text-subtle)' }}>
                 New users must be approved by a leader before accessing the dashboard.
               </p>

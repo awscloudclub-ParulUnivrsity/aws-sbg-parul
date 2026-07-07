@@ -12,9 +12,7 @@ import TeamPage from './pages/team/index';
 import DevProfilePage from './pages/team/[slug]';
 import NotFoundPage from './pages/404';
 import CertifyPage from './pages/certify/index';
-import PortalPage from './pages/portal/index';
-import VerifyPage from './pages/portal/verify';
-
+import CertifiedPage from './pages/certified/index';
 // Dashboard imports
 import DashboardLogin from './pages/dashboard/login';
 import SetPassword from './pages/dashboard/set-password';
@@ -54,8 +52,7 @@ function AppShell() {
           <Route path="team" element={<TeamPage />} />
           <Route path="team/:slug" element={<DevProfilePage />} />
           <Route path="certify" element={<CertifyPage />} />
-          <Route path="portal" element={<PortalPage />} />
-          <Route path="portal/verify" element={<VerifyPage />} />
+          <Route path="certified" element={<CertifiedPage />} />
         </Route>
 
         {/* Dashboard login and set-password (semi-public) */}

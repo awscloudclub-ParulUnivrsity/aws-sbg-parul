@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { CheckCircle, XCircle, Search, ChevronDown, Download, Trash2, Award, AlertTriangle, Lock, Unlock } from 'lucide-react';
 
@@ -23,97 +23,57 @@ export default function MembersPage() {
   const [loading,   setLoading]   = useState(true);
   const [deleteId,  setDeleteId]  = useState(null);
   const [deleting,  setDeleting]  = useState(false);
-  const [badgeId,   setBadgeId]   = useState(null); // member id for badge preview
   const [copied,    setCopied]    = useState(null);
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
-  const [toggling, setToggling] = useState(false);
+  const [toggling,  setToggling]  = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    setMembers(data || []);
-    
-    // Load registration setting
-    const { data: setting } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('key', 'registration_enabled')
-      .single();
-    
-    if (setting) {
-      setRegistrationEnabled(setting.value.enabled);
+    try {
+      const data = await api.getProfiles();
+      setMembers(data || []);
+      const setting = await api.getSetting('registration_enabled');
+      if (setting?.value) setRegistrationEnabled(setting.value.enabled !== false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const approve   = async (id) => { await supabase.from('profiles').update({ approved: true  }).eq('id', id); load(); };
-  const revoke    = async (id) => { await supabase.from('profiles').update({ approved: false }).eq('id', id); load(); };
-  const updateRole = async (id, role) => { await supabase.from('profiles').update({ role }).eq('id', id); load(); };
-  const updateDept = async (id, department) => { await supabase.from('profiles').update({ department }).eq('id', id); load(); };
+  const approve    = async (id) => { await api.updateProfile(id, { approved: true  }); load(); };
+  const revoke     = async (id) => { await api.updateProfile(id, { approved: false }); load(); };
+  const updateRole = async (id, role) => { await api.updateProfile(id, { role }); load(); };
+  const updateDept = async (id, department) => { await api.updateProfile(id, { department }); load(); };
 
   const confirmDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
-    
     try {
-      const memberToDelete = members.find(m => m.id === deleteId);
-      const memberEmail = memberToDelete?.email;
-      
-      // Step 1: Delete related data first
-      await supabase.from('team_members').delete().eq('profile_id', deleteId);
-      
-      if (memberEmail) {
-        await supabase.from('certifications').delete().eq('email', memberEmail);
-      }
-      
-      // Step 2: Delete profile
-      const { error: profileError } = await supabase.from('profiles').delete().eq('id', deleteId);
-      
-      if (profileError) {
-        throw profileError;
-      }
-      
-      // Success - user profile deleted
+      await api.deleteProfile(deleteId);
       setDeleteId(null);
-      setDeleting(false);
       load();
-      
-      // Show success message
-      alert('User deleted successfully!\n\nNote: To fully remove the user from authentication, go to:\nSupabase Dashboard → Authentication → Users → Find "' + (memberToDelete?.name || memberEmail) + '" → Delete');
-      
     } catch (error) {
-      console.error('Delete error:', error);
-      setDeleting(false);
-      setDeleteId(null);
       alert('Delete failed: ' + error.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
   const toggleRegistration = async () => {
     if (!isLeader) return;
     setToggling(true);
-    
     const newValue = !registrationEnabled;
-    
-    const { error } = await supabase
-      .from('settings')
-      .upsert({
-        key: 'registration_enabled',
-        value: { enabled: newValue },
-        updated_at: new Date().toISOString(),
-        updated_by: me.id
-      }, { onConflict: 'key' });
-    
-    if (error) {
-      alert('Failed to update setting: ' + error.message);
-    } else {
+    try {
+      await api.updateSetting('registration_enabled', { enabled: newValue });
       setRegistrationEnabled(newValue);
+    } catch (error) {
+      alert('Failed to update setting: ' + error.message);
+    } finally {
+      setToggling(false);
     }
-    
-    setToggling(false);
   };
 
   const sendBadgeLink = (m) => {
@@ -145,12 +105,9 @@ export default function MembersPage() {
     a.click();
   };
 
-  const badgeMember = members.find(m => m.id === badgeId);
-
   return (
     <div className="space-y-5">
 
-      {/* Registration Toggle (Leader Only) */}
       {isLeader && (
         <div className="rounded-xl border p-4 flex items-center justify-between"
           style={{ background: registrationEnabled ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)', borderColor: registrationEnabled ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)' }}>
@@ -160,9 +117,7 @@ export default function MembersPage() {
               {registrationEnabled ? <Unlock size={18} style={{ color: '#22C55E' }} /> : <Lock size={18} style={{ color: '#EF4444' }} />}
             </div>
             <div>
-              <h3 className="font-mono font-bold uppercase" style={{ fontSize: '11px', color: 'var(--text-primary)' }}>
-                New User Registration
-              </h3>
+              <h3 className="font-mono font-bold uppercase" style={{ fontSize: '11px', color: 'var(--text-primary)' }}>New User Registration</h3>
               <p className="font-sans" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                 {registrationEnabled ? 'New users can request access via Google OAuth' : 'Registration is disabled - only existing users can login'}
               </p>
@@ -170,20 +125,12 @@ export default function MembersPage() {
           </div>
           <button onClick={toggleRegistration} disabled={toggling}
             className="px-4 py-2 rounded-md font-mono font-bold uppercase transition-all"
-            style={{
-              fontSize: '10px',
-              background: registrationEnabled ? '#EF4444' : '#22C55E',
-              color: '#fff',
-              border: 'none',
-              cursor: toggling ? 'not-allowed' : 'pointer',
-              opacity: toggling ? 0.7 : 1
-            }}>
+            style={{ fontSize: '10px', background: registrationEnabled ? '#EF4444' : '#22C55E', color: '#fff', border: 'none', cursor: toggling ? 'not-allowed' : 'pointer', opacity: toggling ? 0.7 : 1 }}>
             {toggling ? 'Updating...' : registrationEnabled ? 'Disable' : 'Enable'}
           </button>
         </div>
       )}
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="relative flex-1 min-w-48 max-w-xs">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-subtle)' }} />
@@ -208,7 +155,6 @@ export default function MembersPage() {
         </div>
       </div>
 
-      {/* Summary pills */}
       <div className="flex gap-3 flex-wrap">
         {[
           { label: 'Total', value: members.length, color: '#AD5CFF' },
@@ -223,16 +169,13 @@ export default function MembersPage() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="rounded-xl border overflow-hidden" style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
         <div className="overflow-x-auto">
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-muted)', background: 'var(--surface-low)' }}>
                 {['Member', 'Email', 'Role', 'Department', 'Status', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '9px', fontFamily: 'inherit', fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-                    {h}
-                  </th>
+                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '9px', fontFamily: 'inherit', fontWeight: 700, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -248,7 +191,6 @@ export default function MembersPage() {
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-mid)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
-                  {/* Name */}
                   <td style={{ padding: '10px 14px' }}>
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-xs flex-shrink-0"
@@ -262,12 +204,10 @@ export default function MembersPage() {
                     </div>
                   </td>
 
-                  {/* Email */}
                   <td style={{ padding: '10px 14px', fontSize: '11px', color: 'var(--text-muted)', maxWidth: '180px' }}>
                     <span className="truncate block">{m.email}</span>
                   </td>
 
-                  {/* Role */}
                   <td style={{ padding: '10px 14px' }}>
                     {isLeader ? (
                       <div className="relative">
@@ -285,7 +225,6 @@ export default function MembersPage() {
                     )}
                   </td>
 
-                  {/* Department */}
                   <td style={{ padding: '10px 14px' }}>
                     {isLeader ? (
                       <div className="relative">
@@ -301,7 +240,6 @@ export default function MembersPage() {
                     )}
                   </td>
 
-                  {/* Status */}
                   <td style={{ padding: '10px 14px' }}>
                     <span className="font-mono font-bold uppercase px-2 py-0.5 rounded"
                       style={{ fontSize: '8px', background: m.approved ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,24,0.12)', color: m.approved ? '#22C55E' : '#F97316' }}>
@@ -309,7 +247,6 @@ export default function MembersPage() {
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td style={{ padding: '10px 14px' }}>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {isLeader && !m.approved && (
@@ -322,7 +259,7 @@ export default function MembersPage() {
                         </button>
                       )}
                       {isLeader && m.approved && (
-                        <button onClick={() => revoke(m.id)} title="Revoke Approval"
+                        <button onClick={() => revoke(m.id)} title="Revoke"
                           className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
                           style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer', color: '#EF4444' }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#fff'; }}
@@ -330,7 +267,6 @@ export default function MembersPage() {
                           <XCircle size={12} />
                         </button>
                       )}
-                      {/* Send Badge Link */}
                       {isLeader && m.approved && (
                         <button onClick={() => sendBadgeLink(m)} title="Copy Badge Link"
                           className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
@@ -340,9 +276,8 @@ export default function MembersPage() {
                           <Award size={12} />
                         </button>
                       )}
-                      {/* Delete */}
                       {isLeader && m.id !== me?.id && (
-                        <button onClick={() => setDeleteId(m.id)} title="Delete Member"
+                        <button onClick={() => setDeleteId(m.id)} title="Delete"
                           className="w-7 h-7 rounded-md flex items-center justify-center transition-all"
                           style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer', color: '#EF4444' }}
                           onMouseEnter={e => { e.currentTarget.style.background = '#EF4444'; e.currentTarget.style.color = '#fff'; }}
@@ -360,22 +295,20 @@ export default function MembersPage() {
       </div>
 
       <p className="font-mono" style={{ fontSize: '10px', color: 'var(--text-subtle)' }}>
-        {filtered.length} member{filtered.length !== 1 ? 's' : ''} shown · Click <Award size={10} style={{ display: 'inline', color: '#AD5CFF' }} /> to copy a member's badge/verification link
+        {filtered.length} member{filtered.length !== 1 ? 's' : ''} shown
       </p>
 
-      {/* Delete Confirm Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="w-full max-w-sm rounded-2xl border p-6 space-y-4 text-center"
             style={{ background: 'var(--card-bg)', borderColor: 'rgba(239,68,68,0.3)' }}>
-            <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center"
-              style={{ background: 'rgba(239,68,68,0.1)' }}>
+            <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.1)' }}>
               <AlertTriangle size={22} style={{ color: '#EF4444' }} />
             </div>
             <div>
               <h3 className="font-mono font-extrabold uppercase" style={{ color: 'var(--text-primary)' }}>Delete Member?</h3>
               <p className="font-sans font-light mt-1" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                This permanently removes the member account and all associated data. This cannot be undone.
+                This permanently removes the member and all associated data. This cannot be undone.
               </p>
             </div>
             <div className="flex gap-3 justify-center">

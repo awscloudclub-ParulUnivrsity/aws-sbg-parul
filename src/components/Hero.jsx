@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Users, Zap, FlaskConical } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import ShapeGrid from './ShapeGrid';
 
 const stats = [
   { icon: Users,        value: '+500', label: 'Active Builders' },
@@ -11,12 +12,35 @@ const stats = [
 
 export function Hero() {
   const { dark } = useTheme();
+  const canvasRef = useRef(null);
+
+  const forwardMouse = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.dispatchEvent(new MouseEvent(e.type, { clientX: e.clientX, clientY: e.clientY, bubbles: false }));
+  };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center pt-14 overflow-hidden">
+    <section
+      id="home"
+      className="relative min-h-screen flex items-center pt-14 overflow-hidden"
+      onMouseMove={forwardMouse}
+      onMouseLeave={forwardMouse}
+    >
 
-      {/* Grid — hero section only */}
-      <div className="site-grid-pattern absolute inset-0 z-0 opacity-70 pointer-events-none" />
+      {/* ShapeGrid background */}
+      <div className="absolute inset-0 z-0">
+        <ShapeGrid
+          ref={canvasRef}
+          speed={0}
+          squareSize={40}
+          direction="diagonal"
+          borderColor="#2F293A"
+          hoverFillColor="#d34af9"
+          shape="square"
+          hoverTrailAmount={6}
+        />
+      </div>
 
       {/* Ambient orbs */}
       <div className="absolute top-1/3 left-1/4 w-80 h-80 rounded-full pointer-events-none z-0"
@@ -37,7 +61,7 @@ export function Hero() {
 
             <h1 className="font-extrabold tracking-tight uppercase leading-[1.05]"
               style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'var(--text-primary)' }}>
-              Build the Future<br />
+              <span className="text-shimmer">Build the Future</span><br />
               <span className="text-shimmer">With Cloud &amp; Generative AI</span>
             </h1>
 

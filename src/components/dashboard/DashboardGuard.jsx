@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 export default function DashboardGuard({ children, requiredRoles }) {
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
@@ -11,7 +11,7 @@ export default function DashboardGuard({ children, requiredRoles }) {
   const [profileError, setProfileError] = useState(false);
   const checkAttempted = useRef(false);
 
-  // Remove hash from URL if present
+  // Remove hash from URL if present (fixes /dashboard# issue)
   useEffect(() => {
     if (location.hash) {
       navigate(location.pathname, { replace: true });
@@ -24,23 +24,19 @@ export default function DashboardGuard({ children, requiredRoles }) {
       if (!user || profile || loading || checkAttempted.current) return;
 
       checkAttempted.current = true;
-      
-      // Wait for trigger to create profile
+
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Check if profile exists now
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (data) {
-        // Profile found, refresh auth context
-        await refreshProfile();
-        setProfileChecked(true);
-      } else {
-        // Profile not found after waiting
+
+      try {
+        const data = await api.getMe();
+        if (data) {
+          await refreshProfile();
+          setProfileChecked(true);
+        } else {
+          setProfileError(true);
+          setProfileChecked(true);
+        }
+      } catch (err) {
         setProfileError(true);
         setProfileChecked(true);
       }
@@ -49,7 +45,6 @@ export default function DashboardGuard({ children, requiredRoles }) {
     checkForProfile();
   }, [user, profile, loading]);
 
-  // Show loading while checking
   if (loading || (user && !profile && !profileChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
@@ -64,12 +59,8 @@ export default function DashboardGuard({ children, requiredRoles }) {
     );
   }
 
-  // Not authenticated
-  if (!user) {
-    return <Navigate to="/dashboard/login" replace />;
-  }
+  if (!user) return <Navigate to="/dashboard/login" replace />;
 
-  // Profile error after checking
   if (profileError || (!profile && profileChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
@@ -85,14 +76,12 @@ export default function DashboardGuard({ children, requiredRoles }) {
             Your profile could not be created. This might be a temporary issue.
           </p>
           <div className="flex gap-2 justify-center">
-            <button 
-              onClick={() => window.location.reload()} 
+            <button onClick={() => window.location.reload()}
               className="px-4 py-2 rounded-md font-mono font-bold uppercase"
               style={{ fontSize: '10px', background: '#AD5CFF', color: '#fff', border: 'none', cursor: 'pointer' }}>
               Retry
             </button>
-            <button 
-              onClick={() => { signOut(); navigate('/dashboard/login'); }} 
+            <button onClick={() => { signOut(); navigate('/dashboard/login'); }}
               className="px-4 py-2 rounded-md font-mono font-bold uppercase"
               style={{ fontSize: '10px', background: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer' }}>
               Sign Out
@@ -103,12 +92,10 @@ export default function DashboardGuard({ children, requiredRoles }) {
     );
   }
 
-  // Check if Google OAuth user needs to set password
   if (profile && profile.password_set === false) {
     return <Navigate to="/dashboard/set-password" replace />;
   }
 
-  // Not approved yet
   if (profile && !profile.approved && profile.role !== 'leader') {
     return (
       <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
@@ -124,15 +111,10 @@ export default function DashboardGuard({ children, requiredRoles }) {
             Your account is awaiting approval from the Chapter Lead. You'll get access once approved.
           </p>
           <div className="flex gap-2 justify-center">
-            <a 
-              href="/" 
-              className="inline-block font-mono font-bold uppercase no-underline transition-colors"
-              style={{ fontSize: '10px', color: '#AD5CFF' }}>
-              ← Back to website
-            </a>
+            <a href="/" className="inline-block font-mono font-bold uppercase no-underline transition-colors"
+              style={{ fontSize: '10px', color: '#AD5CFF' }}>← Back to website</a>
             <span style={{ color: 'var(--text-muted)' }}>|</span>
-            <button 
-              onClick={() => { signOut(); navigate('/dashboard/login'); }} 
+            <button onClick={() => { signOut(); navigate('/dashboard/login'); }}
               className="font-mono font-bold uppercase transition-colors"
               style={{ fontSize: '10px', color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
               Logout
@@ -143,7 +125,6 @@ export default function DashboardGuard({ children, requiredRoles }) {
     );
   }
 
-  // Role check
   if (requiredRoles && !requiredRoles.includes(profile.role)) {
     return <Navigate to="/dashboard" replace />;
   }

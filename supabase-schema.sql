@@ -177,6 +177,36 @@ create trigger on_auth_user_created
 -- update public.profiles set role = 'leader', approved = true
 -- where email = 'awssbgpu@gmail.com';
 
+-- 5. SETTINGS
+create table if not exists public.settings (
+  id         uuid default gen_random_uuid() primary key,
+  key        text unique not null,
+  value      jsonb not null default '{}',
+  updated_at timestamptz default now(),
+  updated_by uuid references public.profiles(id)
+);
+
+alter table public.settings enable row level security;
+
+create policy "Settings readable by approved members"
+  on public.settings for select using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.approved = true)
+  );
+
+create policy "Leader can upsert settings"
+  on public.settings for insert with check (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+  );
+
+create policy "Leader can update settings"
+  on public.settings for update using (
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'leader')
+  );
+
+-- Seed default settings
+insert into public.settings (key, value) values ('registration_enabled', '{"enabled": true}')
+on conflict (key) do nothing;
+
 -- ============================================================
 -- STORAGE BUCKETS FOR FILE UPLOADS
 -- ============================================================

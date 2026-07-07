@@ -23,7 +23,7 @@ const socials = [
   },
   {
     label: 'Instagram',
-    href: 'https://instagram.com/awssbgpu',
+    href: 'https://www.instagram.com/aws.sbg_pu/',
     icon: () => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -34,7 +34,7 @@ const socials = [
   },
   {
     label: 'LinkedIn',
-    href: 'https://linkedin.com/company/awssbgpu',
+    href: 'https://www.linkedin.com/company/aws-student-builder-group-parul-university/',
     icon: () => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/>
@@ -151,12 +151,12 @@ export function Footer() {
               <div>
                 <p className="uppercase tracking-widest mb-0.5"
                   style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>Email</p>
-                <a href="mailto:awssbgpu@gmail.com"
+                <a href="mailto:awscloudclub@paruluniversity.ac.in"
                   className="font-sans no-underline transition-colors"
                   style={{ color: 'var(--text-muted)' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#AD5CFF'}
                   onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-                  awssbgpu@gmail.com
+                  awscloudclub@paruluniversity.ac.in
                 </a>
               </div>
             </li>
@@ -166,7 +166,7 @@ export function Footer() {
                 <p className="uppercase tracking-widest mb-0.5"
                   style={{ fontSize: '9px', color: 'var(--text-subtle)' }}>Location</p>
                 <span className="font-sans font-light leading-relaxed">
-                  Parul University, Vadodara, Gujarat, India.
+                  Parul University, L103, C.V. Raman Building, Vadodara, Gujarat, India.
                 </span>
               </div>
             </li>

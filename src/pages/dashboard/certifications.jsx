@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, Copy, ExternalLink, RefreshCw, Search, XCircle, Image, FileText } from 'lucide-react';
+import { exportToSheet } from '../../lib/sheets';
+import { CheckCircle, Copy, ExternalLink, RefreshCw, Search, XCircle, Image, FileText, Upload, Trash2 } from 'lucide-react';
 
 const STATUS_COLOR = { pending: '#F97316', approved: '#22C55E', posted: '#AD5CFF' };
 
@@ -20,6 +21,7 @@ function CertCard({ c, onStatusChange }) {
   const [draft, setDraft] = useState(c.post_draft || generatePost(c));
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [exportMsg, setExportMsg] = useState('');
 
   const copy = () => {
     navigator.clipboard.writeText(draft);
@@ -31,6 +33,29 @@ function CertCard({ c, onStatusChange }) {
     setSaving(true);
     await supabase.from('certifications').update({ status, post_draft: draft }).eq('id', c.id);
     setSaving(false);
+    onStatusChange();
+  };
+
+  const approveAndExport = async () => {
+    setSaving(true);
+    setExportMsg('');
+    try {
+      // 1. Export to Google Sheet
+      await exportToSheet(c);
+      // 2. Delete from Supabase to free DB space
+      await supabase.from('certifications').delete().eq('id', c.id);
+      setExportMsg('Exported & removed from DB ✓');
+      setTimeout(() => onStatusChange(), 1200);
+    } catch (err) {
+      setExportMsg(`Error: ${err.message}`);
+      setSaving(false);
+    }
+  };
+
+  const deleteRecord = async () => {
+    if (!confirm(`Reject and delete "${c.name}"'s submission? This cannot be undone.`)) return;
+    setSaving(true);
+    await supabase.from('certifications').delete().eq('id', c.id);
     onStatusChange();
   };
 
@@ -130,42 +155,52 @@ function CertCard({ c, onStatusChange }) {
             onBlur={e => e.target.style.borderColor = 'var(--border-muted)'}
           />
 
+          {exportMsg && (
+            <p className="font-mono" style={{ fontSize: '9px', color: exportMsg.startsWith('Error') ? '#EF4444' : '#22C55E' }}>
+              {exportMsg}
+            </p>
+          )}
+
           <div className="flex gap-2 flex-wrap">
+            {/* Approve & Export to Sheet — main action for pending */}
             {c.status === 'pending' && (
-              <>
-                <button onClick={() => updateStatus('approved')} disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
-                  style={{ fontSize: '9px', background: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
-                  <CheckCircle size={11} /> {saving ? 'Saving...' : 'Approve'}
-                </button>
-                <button onClick={() => updateStatus('pending')} disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
-                  style={{ fontSize: '9px', background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', cursor: saving ? 'not-allowed' : 'pointer' }}>
-                  <XCircle size={11} /> Reset to Pending
-                </button>
-              </>
+              <button onClick={approveAndExport} disabled={saving}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
+                style={{ fontSize: '9px', background: 'rgba(34,197,94,0.1)', color: '#22C55E', border: '1px solid rgba(34,197,94,0.3)', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+                <Upload size={11} /> {saving ? 'Exporting...' : 'Approve & Export to Sheet'}
+              </button>
             )}
+
+            {/* Keep old approve-only for edge cases */}
+            {c.status === 'pending' && (
+              <button onClick={() => updateStatus('approved')} disabled={saving}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
+                style={{ fontSize: '9px', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-muted)', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                <CheckCircle size={11} /> Approve Only
+              </button>
+            )}
+
             {c.status === 'approved' && (
               <>
-                <button onClick={() => updateStatus('posted')} disabled={saving}
+                <button onClick={approveAndExport} disabled={saving}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
                   style={{ fontSize: '9px', background: 'rgba(173,92,255,0.1)', color: '#AD5CFF', border: '1px solid rgba(173,92,255,0.3)', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
-                  ✓ {saving ? 'Saving...' : 'Mark as Posted'}
+                  <Upload size={11} /> {saving ? 'Exporting...' : 'Export to Sheet'}
                 </button>
                 <button onClick={() => updateStatus('pending')} disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase"
                   style={{ fontSize: '9px', background: 'rgba(249,115,24,0.1)', color: '#F97316', border: '1px solid rgba(249,115,24,0.3)', cursor: 'pointer' }}>
                   ↩ Undo
                 </button>
               </>
             )}
-            {c.status === 'posted' && (
-              <button onClick={() => updateStatus('approved')} disabled={saving}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase"
-                style={{ fontSize: '9px', background: 'var(--surface-low)', color: 'var(--text-muted)', border: '1px solid var(--border-muted)', cursor: 'pointer' }}>
-                ↩ Reopen
-              </button>
-            )}
+
+            {/* Reject / Delete */}
+            <button onClick={deleteRecord} disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all"
+              style={{ fontSize: '9px', background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)', cursor: saving ? 'not-allowed' : 'pointer' }}>
+              <Trash2 size={11} /> Reject & Delete
+            </button>
           </div>
         </div>
       </div>
