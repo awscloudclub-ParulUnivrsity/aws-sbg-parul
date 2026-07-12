@@ -15,6 +15,7 @@ export default function TeamManagePage() {
   const { profile: me } = useAuth();
   const [team,     setTeam]     = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [loadErr,  setLoadErr]  = useState('');
   const [modal,    setModal]    = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -24,14 +25,26 @@ export default function TeamManagePage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('team_members')
-      .select('*, profile:profiles(id,name,email,role,avatar_url)')
-      .order('created_at', { ascending: true });
-    console.log('[TeamLoad] data:', data, 'error:', error);
-    if (error) console.error('team_members load error:', error);
-    setTeam(data || []);
-    setLoading(false);
+    setLoadErr('');
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*, profile:profiles(id,name,email,role,avatar_url)')
+        .order('created_at', { ascending: true });
+      console.log('[TeamLoad] data:', data, 'error:', error);
+      if (error) {
+        setLoadErr(error.message);
+        setTeam([]);
+      } else {
+        setTeam(data || []);
+      }
+    } catch (e) {
+      console.error('[TeamLoad] exception:', e);
+      setLoadErr(e.message);
+      setTeam([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -120,6 +133,11 @@ export default function TeamManagePage() {
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#AD5CFF', borderTopColor: 'transparent' }} />
+        </div>
+      ) : loadErr ? (
+        <div className="rounded-xl border p-6 text-center" style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }}>
+          <p className="font-mono text-xs" style={{ color: '#EF4444' }}>Load error: {loadErr}</p>
+          <button onClick={load} className="mt-3 px-4 py-2 rounded font-mono font-bold uppercase text-white text-xs" style={{ background: '#AD5CFF', border: 'none', cursor: 'pointer' }}>Retry</button>
         </div>
       ) : team.length === 0 ? (
         <div className="rounded-xl border p-10 text-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
