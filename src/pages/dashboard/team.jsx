@@ -31,12 +31,12 @@ export default function TeamManagePage() {
         .from('team_members')
         .select('*, profile:profiles(id,name,email,role,avatar_url)')
         .order('created_at', { ascending: true });
-      console.log('[TeamLoad] data:', data, 'error:', error);
+      console.log('[TeamLoad] data:', JSON.stringify(data), 'error:', error);
       if (error) {
         setLoadErr(error.message);
         setTeam([]);
       } else {
-        setTeam(data || []);
+        setTeam(data ?? []);
       }
     } catch (e) {
       console.error('[TeamLoad] exception:', e);
@@ -142,6 +142,7 @@ export default function TeamManagePage() {
       ) : team.length === 0 ? (
         <div className="rounded-xl border p-10 text-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
           <p className="font-mono" style={{ fontSize: '12px', color: 'var(--text-subtle)' }}>No team members yet. Add members to display them on the public team page.</p>
+          <p className="font-mono mt-2" style={{ fontSize: '10px', color: '#AD5CFF' }}>Debug: team array is empty after load</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
