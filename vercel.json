@@ -1,4 +1,6 @@
 {
+  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "rewrites": [
     { "source": "/meetup-rss/:path*", "destination": "https://www.meetup.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
