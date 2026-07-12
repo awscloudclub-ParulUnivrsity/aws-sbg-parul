@@ -6,7 +6,6 @@ export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -30,14 +29,10 @@ export default function TeamPage() {
         `)
         .order('created_at', { ascending: true });
 
-      console.log('[TeamPage] data:', data, 'error:', error);
-      setDebugInfo({ data, error: error?.message || null });
-
       if (error) throw error;
       setTeamMembers(data || []);
     } catch (err) {
-      console.error('[TeamPage] fetch failed:', err);
-      setError(`Failed to load team members: ${err.message}`);
+      setError('Failed to load team members.');
     } finally {
       setLoading(false);
     }
@@ -76,19 +71,6 @@ export default function TeamPage() {
           <div className="text-center py-4 px-4 rounded-lg border"
             style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)', color: '#EF4444', fontSize: '13px' }}>
             {error}
-          </div>
-        )}
-
-        {/* Debug panel — remove after fixing */}
-        {debugInfo && (
-          <div className="rounded-lg border p-4 font-mono"
-            style={{ background: 'rgba(0,0,0,0.3)', borderColor: 'rgba(173,92,255,0.3)', fontSize: '11px', color: '#AD5CFF' }}>
-            <p className="font-bold mb-1">DEBUG (remove later):</p>
-            <p>Error: {debugInfo.error || 'none'}</p>
-            <p>Row count: {debugInfo.data?.length ?? 'null'}</p>
-            {debugInfo.data?.length > 0 && (
-              <p>First row keys: {Object.keys(debugInfo.data[0]).join(', ')}</p>
-            )}
           </div>
         )}
 

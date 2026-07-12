@@ -31,7 +31,6 @@ export default function TeamManagePage() {
         .from('team_members')
         .select('*, profile:profiles!team_members_profile_id_fkey(id,name,email,role,avatar_url)')
         .order('created_at', { ascending: true });
-      console.log('[TeamLoad] data:', JSON.stringify(data), 'error:', error);
       if (error) {
         setLoadErr(error.message);
         setTeam([]);
@@ -39,7 +38,6 @@ export default function TeamManagePage() {
         setTeam(data ?? []);
       }
     } catch (e) {
-      console.error('[TeamLoad] exception:', e);
       setLoadErr(e.message);
       setTeam([]);
     } finally {
@@ -52,51 +50,37 @@ export default function TeamManagePage() {
   const add = async () => {
     setSaving(true); setErr('');
 
-    // 1. Find the profile by email
     const { data: found, error: findErr } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', form.email.trim())
       .maybeSingle();
 
-    console.log('[TeamAdd] profile lookup:', found, findErr);
-
     if (findErr) { setErr(`Lookup error: ${findErr.message}`); setSaving(false); return; }
     if (!found) { setErr('No account found with that email. Ask them to sign up first.'); setSaving(false); return; }
 
-    // 2. Check if already in team
-    const { data: existing, error: existErr } = await supabase
+    const { data: existing } = await supabase
       .from('team_members')
       .select('id')
       .eq('profile_id', found.id)
       .maybeSingle();
 
-    console.log('[TeamAdd] existing check:', existing, existErr);
-
     if (existing) { setErr('This person is already in the core team.'); setSaving(false); return; }
 
-    // 3. Insert
-    const payload = {
-      profile_id:  found.id,
-      role_title:  form.role_title,
-      department:  form.department,
-      linkedin:    form.linkedin,
-      github:      form.github,
-      approved_by: me.id,
-      approved_at: new Date().toISOString(),
-    };
-    console.log('[TeamAdd] inserting:', payload);
-
-    const { data: inserted, error: insertErr } = await supabase
+    const { error: insertErr } = await supabase
       .from('team_members')
-      .insert(payload)
-      .select();
-
-    console.log('[TeamAdd] insert result:', inserted, insertErr);
+      .insert({
+        profile_id:  found.id,
+        role_title:  form.role_title,
+        department:  form.department,
+        linkedin:    form.linkedin,
+        github:      form.github,
+        approved_by: me.id,
+        approved_at: new Date().toISOString(),
+      });
 
     if (insertErr) { setErr(`Insert failed: ${insertErr.message}`); setSaving(false); return; }
 
-    // 4. Auto-approve their profile
     await supabase.from('profiles').update({ approved: true, department: form.department }).eq('id', found.id);
 
     setSaving(false);
@@ -142,7 +126,6 @@ export default function TeamManagePage() {
       ) : team.length === 0 ? (
         <div className="rounded-xl border p-10 text-center" style={{ background: 'var(--card-bg)', borderColor: 'var(--border-muted)' }}>
           <p className="font-mono" style={{ fontSize: '12px', color: 'var(--text-subtle)' }}>No team members yet. Add members to display them on the public team page.</p>
-          <p className="font-mono mt-2" style={{ fontSize: '10px', color: '#AD5CFF' }}>Debug: team array is empty after load</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
