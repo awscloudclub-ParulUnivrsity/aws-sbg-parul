@@ -90,7 +90,7 @@ export default function TeamPage() {
                     title: member.department || member.profile?.department || '',
                     initial: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
                     photo: member.profile?.avatar_url || null,
-                    skills: member.skills ? member.skills.split(',').map(s => s.trim()) : [],
+                    skills: member.skills ? String(member.skills).split(',').map(s => s.trim()) : [],
                     linkedin: member.linkedin,
                     github: member.github,
                     gradient: 'linear-gradient(135deg, #AD5CFF, #F97316)',

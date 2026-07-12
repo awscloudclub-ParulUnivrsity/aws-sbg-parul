@@ -49,7 +49,7 @@ export default function DevProfilePage() {
         title: m.department || m.profile?.department || '',
         photo: m.profile?.avatar_url || null,
         bio: m.profile?.bio || '',
-        skills: m.skills ? m.skills.split(',').map(s => s.trim()) : [],
+        skills: m.skills ? String(m.skills).split(',').map(s => s.trim()) : [],
         linkedin: m.linkedin || '',
         github: m.github || '',
         gradient: 'linear-gradient(135deg, #AD5CFF, #F97316)',
