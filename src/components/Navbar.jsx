@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, Menu, X, Sun, Moon } from 'lucide-react';
+import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
 
 const navLinks = [
   { label: 'Home',    href: '/'        },
@@ -15,12 +14,9 @@ const navLinks = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { dark, toggle } = useTheme();
   const location = useLocation();
 
-  const t = dark
-    ? { nav: 'rgba(7,10,19,0.88)', border: '#1E293B', text: '#94A3B8', mob: '#070A13' }
-    : { nav: 'rgba(241,245,249,0.92)', border: '#CBD5E1', text: '#475569', mob: '#F8FAFC' };
+  const t = { nav: 'rgba(7,10,19,0.88)', border: '#1E293B', text: '#94A3B8', mob: '#070A13' };
 
   const isActive = (href) => location.pathname === href || (href !== '/' && location.pathname.startsWith(href));
 
@@ -50,7 +46,7 @@ export function Navbar() {
             <Link key={label} to={href}
               className="py-1.5 px-3 rounded-md transition-all no-underline font-medium"
               style={{ color: isActive(href) ? '#AD5CFF' : t.text }}
-              onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = isActive(href) ? '#AD5CFF' : t.text; }}>
               {label}
             </Link>
@@ -59,15 +55,6 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <button onClick={toggle}
-            className="w-8 h-8 rounded-md border flex items-center justify-center transition-all"
-            style={{ background: 'transparent', borderColor: t.border, color: t.text }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#AD5CFF'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = t.border}
-            aria-label="Toggle theme">
-            {dark ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
-
           <a href="https://www.meetup.com/aws-sbg-at-parul-university/" target="_blank" rel="noreferrer"
             className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-md font-mono font-bold uppercase text-white transition-all no-underline"
             style={{ fontSize: '10px', letterSpacing: '0.08em', background: '#AD5CFF', boxShadow: '0 0 20px rgba(173,92,255,0.15)' }}
