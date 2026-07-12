@@ -26,7 +26,7 @@ export default function DevProfilePage() {
 
     const { data, error } = await supabase
       .from('team_members')
-      .select(`*, profile:profiles(id, name, email, role, department, avatar_url, bio)`)
+      .select(`*, profile:profiles!team_members_profile_id_fkey(id, name, email, role, department, avatar_url, bio)`)
       .order('created_at', { ascending: true });
 
     if (error || !data) { setNotFound(true); setLoading(false); return; }

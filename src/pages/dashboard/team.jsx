@@ -29,7 +29,7 @@ export default function TeamManagePage() {
     try {
       const { data, error } = await supabase
         .from('team_members')
-        .select('*, profile:profiles(id,name,email,role,avatar_url)')
+        .select('*, profile:profiles!team_members_profile_id_fkey(id,name,email,role,avatar_url)')
         .order('created_at', { ascending: true });
       console.log('[TeamLoad] data:', JSON.stringify(data), 'error:', error);
       if (error) {

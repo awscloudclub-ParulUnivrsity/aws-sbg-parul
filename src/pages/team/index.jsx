@@ -18,7 +18,7 @@ export default function TeamPage() {
         .from('team_members')
         .select(`
           *,
-          profile:profiles(
+          profile:profiles!team_members_profile_id_fkey(
             id,
             name,
             email,
