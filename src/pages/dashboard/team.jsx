@@ -28,6 +28,7 @@ export default function TeamManagePage() {
       .from('team_members')
       .select('*, profile:profiles(id,name,email,role,avatar_url)')
       .order('created_at', { ascending: true });
+    console.log('[TeamLoad] data:', data, 'error:', error);
     if (error) console.error('team_members load error:', error);
     setTeam(data || []);
     setLoading(false);
@@ -37,14 +38,32 @@ export default function TeamManagePage() {
 
   const add = async () => {
     setSaving(true); setErr('');
-    const { data: found } = await supabase.from('profiles').select('id').eq('email', form.email.trim()).maybeSingle();
+
+    // 1. Find the profile by email
+    const { data: found, error: findErr } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', form.email.trim())
+      .maybeSingle();
+
+    console.log('[TeamAdd] profile lookup:', found, findErr);
+
+    if (findErr) { setErr(`Lookup error: ${findErr.message}`); setSaving(false); return; }
     if (!found) { setErr('No account found with that email. Ask them to sign up first.'); setSaving(false); return; }
 
-    // Check if already in team
-    const { data: existing } = await supabase.from('team_members').select('id').eq('profile_id', found.id).maybeSingle();
+    // 2. Check if already in team
+    const { data: existing, error: existErr } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('profile_id', found.id)
+      .maybeSingle();
+
+    console.log('[TeamAdd] existing check:', existing, existErr);
+
     if (existing) { setErr('This person is already in the core team.'); setSaving(false); return; }
 
-    const { error } = await supabase.from('team_members').insert({
+    // 3. Insert
+    const payload = {
       profile_id:  found.id,
       role_title:  form.role_title,
       department:  form.department,
@@ -52,10 +71,19 @@ export default function TeamManagePage() {
       github:      form.github,
       approved_by: me.id,
       approved_at: new Date().toISOString(),
-    });
-    if (error) { setErr(error.message); setSaving(false); return; }
+    };
+    console.log('[TeamAdd] inserting:', payload);
 
-    // Auto-approve their profile
+    const { data: inserted, error: insertErr } = await supabase
+      .from('team_members')
+      .insert(payload)
+      .select();
+
+    console.log('[TeamAdd] insert result:', inserted, insertErr);
+
+    if (insertErr) { setErr(`Insert failed: ${insertErr.message}`); setSaving(false); return; }
+
+    // 4. Auto-approve their profile
     await supabase.from('profiles').update({ approved: true, department: form.department }).eq('id', found.id);
 
     setSaving(false);
