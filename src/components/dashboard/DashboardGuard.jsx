@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 export default function DashboardGuard({ children, requiredRoles }) {
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
@@ -25,10 +26,33 @@ export default function DashboardGuard({ children, requiredRoles }) {
 
       checkAttempted.current = true;
 
+      // Wait for trigger to fire
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       try {
-        const data = await api.getMe();
+        let data = await api.getMe();
+
+        // Trigger failed — manually create the profile as a fallback
+        if (!data) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              name: user.user_metadata?.name || user.user_metadata?.full_name || user.email.split('@')[0],
+              email: user.email,
+              role: 'member',
+              approved: false,
+              password_set: false,
+            })
+            .single();
+
+          if (!insertError) {
+            // Wait a beat then re-fetch
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            data = await api.getMe();
+          }
+        }
+
         if (data) {
           await refreshProfile();
           setProfileChecked(true);
