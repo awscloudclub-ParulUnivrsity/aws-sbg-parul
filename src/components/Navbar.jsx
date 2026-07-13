@@ -55,14 +55,6 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Link to="/dashboard"
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono font-bold uppercase transition-all no-underline"
-            style={{ fontSize: '10px', letterSpacing: '0.08em', color: '#94A3B8', border: '1px solid #1E293B', background: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#AD5CFF'; e.currentTarget.style.color = '#AD5CFF'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E293B'; e.currentTarget.style.color = '#94A3B8'; }}>
-            Dashboard
-          </Link>
-
           <a href="https://www.meetup.com/aws-sbg-at-parul-university/" target="_blank" rel="noreferrer"
             className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-md font-mono font-bold uppercase text-white transition-all no-underline"
             style={{ fontSize: '10px', letterSpacing: '0.08em', background: '#AD5CFF', boxShadow: '0 0 20px rgba(173,92,255,0.15)' }}
@@ -89,12 +81,6 @@ export function Navbar() {
               {label}
             </Link>
           ))}
-          <Link to="/dashboard"
-            className="mt-2 flex items-center justify-center gap-1.5 py-2.5 rounded-md font-mono font-bold uppercase no-underline"
-            style={{ fontSize: '10px', color: '#94A3B8', border: '1px solid #1E293B', background: 'transparent' }}
-            onClick={() => setOpen(false)}>
-            Dashboard
-          </Link>
           <a href="https://www.meetup.com/aws-sbg-at-parul-university/" target="_blank" rel="noreferrer"
             className="mt-2 flex items-center justify-center gap-1.5 py-2.5 rounded-md font-mono font-bold uppercase text-white no-underline"
             style={{ fontSize: '10px', background: '#AD5CFF' }}>
